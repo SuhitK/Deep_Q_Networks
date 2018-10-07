@@ -12,11 +12,13 @@ class Replay_Memory():
             transition_tuple: tuple(S,A,R,S',done)"""
 
         if self.index < self.memory_size:
+            # print (self.index)
             self.memory.append(transition_tuple)
-            index += 1
+            self.index += 1
         else:
-            self.memory[index % self.memory_size] = transition_tuple
-            index += 1
+            # print ('asdf')
+            self.memory[self.index % self.memory_size] = transition_tuple
+            self.index += 1
 
     def sample_batch(self, batch_size=32):
         return random.sample(self.memory, batch_size)
