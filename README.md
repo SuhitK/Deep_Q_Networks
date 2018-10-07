@@ -7,7 +7,6 @@ Implementing DQN, Double DQN and Duelling Networks on Atari Environment.
 - [  ]  model.test()
 
 ### DQN (Suhit)
-- [  ] Replay memory
+- [ x ] Replay memory
 - [  ] Sample states from gym environment
-- [  ]  Preprocess states sampled.
 
