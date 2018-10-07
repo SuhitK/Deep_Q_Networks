@@ -1,4 +1,4 @@
-from  utils.replay_memory import Replay_Memory 
+from  DQN.replay_memory import Replay_Memory 
 
 class DQN_Agent():
 
@@ -8,7 +8,8 @@ class DQN_Agent():
             # Here is also a good place to set environmental parameters,
             # as well as training parameters - number of episodes / iterations, etc. 
             self.env = gym.make(environment_name)
-            replay_memory = Replay_Memory()
+            self.init_state = env.reset()
+            self.replay_memory = Replay_Memory()
 
     def epsilon_greedy_policy(self, q_values):
             # Creating epsilon greedy probabilities to sample from.             

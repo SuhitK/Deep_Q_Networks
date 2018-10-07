@@ -1,4 +1,4 @@
-from utils.DQN_agent import DQN_Agent
+from DQN.DQN_agent import DQN_Agent
 
 def main():
     print ('asfas')
