@@ -42,7 +42,7 @@ class DQN_Agent():
             count = 0
             while count != self.replay_memory.burn_in:
                 state = self.env.reset()
-                while True:
+                for t in range(200):
                     action = self.env.action_space.sample()
                     next_state, reward, done, info = self.env.step(action)
                     transition_tuple = (state, action, reward, next_state, done)
