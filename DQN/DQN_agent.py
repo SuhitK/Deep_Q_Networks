@@ -4,21 +4,20 @@ import pdb
 
 from  DQN.replay_memory import Replay_Memory
 
+
 class DQN_Agent():
-
-    def __init__(self, environment_name, memory_size = 50000, burn_in = 10000, render=False):
-
+    def __init__(self, environment_name, memory_size=50000, burn_in=10000, render=False):
             # Create an instance of the network itself, as well as the memory.
             # Here is also a good place to set environmental parameters,
             # as well as training parameters - number of episodes / iterations, etc.
             self.env = gym.make(environment_name)
             self.init_state = self.env.reset()
-            self.replay_memory = Replay_Memory(memory_size = memory_size, burn_in = burn_in)
+            self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
             self.epsilon = 0.5 #Epsilon used for epsilon-greedy policy
             self.greedy_epsilon = 0.05 #Epsilon used for greedy policy
 
     def epsilon_greedy_policy(self, q_values):
-            # Creating epsilon greedy probabilities to sample from.             
+            # Creating epsilon greedy probabilities to sample from.
             num_actions = self.env.action_space.n
             actions = range(num_actions)
             policy = np.zeros((num_actions))
@@ -28,10 +27,9 @@ class DQN_Agent():
             action = np.random.choice(actions, p = policy)
             return action
 
-
-
     def greedy_policy(self, q_values):
-            # Creating greedy policy for test time. 
+            # Creating greedy policy for test time.
+            # Creating epsilon greedy probabilities to sample from.
             num_actions = self.env.action_space.n
             actions = range(num_actions)
             policy = np.zeros((num_actions))
@@ -40,9 +38,6 @@ class DQN_Agent():
             policy[max_action] = 1 - self.greedy_epsilon
             action = np.random.choice(actions, p = policy)
             return action
-
-            # Creating epsilon greedy probabilities to sample from.
-            pass
 
     def greedy_policy(self, q_values):
             # Creating greedy policy for test time.
@@ -55,8 +50,8 @@ class DQN_Agent():
 
             # If you are using a replay memory, you should interact with environment here, and store these
             # transitions to memory, while also updating your model.
-            
-            "Model update code comes here and also predicting q for current state"
+
+            # TODO: Model update code comes here and also predicting q for current state
             action = self.epsilon_greedy_policy(q_values)
             next_state, reward, done, info = self.env.step(action)
             transition_tuple = (self.env.env.state, action, reward, next_state, done)
