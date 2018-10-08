@@ -10,11 +10,11 @@ class DQN_Agent():
             # Create an instance of the network itself, as well as the memory.
             # Here is also a good place to set environmental parameters,
             # as well as training parameters - number of episodes / iterations, etc.
+            self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
             self.env = gym.make(environment_name)
             self.init_state = self.env.reset()
-            self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
-            self.epsilon = 0.5              # Epsilon used for epsilon-greedy policy
             self.greedy_epsilon = 0.05      # Epsilon used for greedy policy
+            self.epsilon = 0.5              # Epsilon used for epsilon-greedy policy
 
     def epsilon_greedy_policy(self, q_values):
             # Creating epsilon greedy probabilities to sample from.
