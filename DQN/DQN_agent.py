@@ -14,14 +14,33 @@ class DQN_Agent():
             self.env = gym.make(environment_name)
             self.init_state = self.env.reset()
             self.replay_memory = Replay_Memory(memory_size = memory_size, burn_in = burn_in)
+            self.epsilon = 0.5 #Epsilon used for epsilon-greedy policy
+            self.greedy_epsilon = 0.05 #Epsilon used for greedy policy
 
     def epsilon_greedy_policy(self, q_values):
             # Creating epsilon greedy probabilities to sample from.             
-            pass
+            num_actions = self.env.action_space.n
+            actions = range(num_actions)
+            policy = np.zeros((num_actions))
+            max_action = np.argmax(q_values)
+            policy[:] = self.epsilon / num_actions
+            policy[max_action] = 1 - self.epsilon
+            action = np.random.choice(actions, p = policy)
+            return action
+
+
 
     def greedy_policy(self, q_values):
             # Creating greedy policy for test time. 
-            pass 
+            num_actions = self.env.action_space.n
+            actions = range(num_actions)
+            policy = np.zeros((num_actions))
+            max_action = np.argmax(q_values)
+            policy[:] = self.greedy_epsilon / num_actions
+            policy[max_action] = 1 - self.greedy_epsilon
+            action = np.random.choice(actions, p = policy)
+            return action
+
 
     def train(self):
             # In this function, we will train our network. 
@@ -30,7 +49,14 @@ class DQN_Agent():
 
             # If you are using a replay memory, you should interact with environment here, and store these 
             # transitions to memory, while also updating your model.
-            pass
+            
+            "Model update code comes here and also predicting q for current state"
+            action = self.epsilon_greedy_policy(q_values)
+            next_state, reward, done, info = self.env.step(action)
+            transition_tuple = (self.env.env.state, action, reward, next_state, done)
+            self.replay_memory.append(transition_tuple)
+
+
 
     def test(self, model_file=None):
             # Evaluate the performance of your agent over 100 episodes, by calculating cummulative rewards for the 100 episodes.
