@@ -9,10 +9,10 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 set shortmess=aoO
 badd +2 main.py
-badd +56 DQN/DQN_agent.py
+badd +21 DQN/DQN_agent.py
 badd +0 DQN/replay_memory.py
 badd +0 DQN_Implementation.py
-badd +0 cartpole_env.py
+badd +21 cartpole_env.py
 badd +99 ~/Codes/10703/HW1/F18_10703_HW_1_base_code/deeprl_hw1/q2.py
 badd +314 ~/Codes/10703/HW1/F18_10703_HW_1_base_code/deeprl_hw1/rl.py
 argglobal
@@ -63,28 +63,6 @@ exe s:l
 normal! zt
 1
 normal! 021|
-tabedit DQN/DQN_agent.py
-set splitbelow splitright
-set nosplitbelow
-set nosplitright
-wincmd t
-set winminheight=1 winheight=1 winminwidth=1 winwidth=1
-argglobal
-setlocal fdm=manual
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=0
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 29) / 58)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-1
-normal! 0
 tabedit cartpole_env.py
 set splitbelow splitright
 set nosplitbelow

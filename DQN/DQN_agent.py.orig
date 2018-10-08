@@ -18,6 +18,7 @@ class DQN_Agent():
             self.greedy_epsilon = 0.05 #Epsilon used for greedy policy
 
     def epsilon_greedy_policy(self, q_values):
+<<<<<<< HEAD
             # Creating epsilon greedy probabilities to sample from.             
             num_actions = self.env.action_space.n
             actions = range(num_actions)
@@ -41,12 +42,14 @@ class DQN_Agent():
             action = np.random.choice(actions, p = policy)
             return action
 
+=======
             # Creating epsilon greedy probabilities to sample from.
             pass
 
     def greedy_policy(self, q_values):
             # Creating greedy policy for test time.
             pass
+>>>>>>> 2f4a6157b81431a59787294753308e6309a7bfc7
 
     def train(self):
             # In this function, we will train our network.
