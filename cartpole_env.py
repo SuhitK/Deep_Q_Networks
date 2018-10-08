@@ -3,6 +3,7 @@ import numpy as np
 import gym
 import pdb
 
+
 def main():
     env = gym.make('CartPole-v0')
     # env = gym.wrappers.Monitor(env, '.', force=True)
@@ -16,6 +17,7 @@ def main():
             break
     # env.env.close()
     env.close()
+
 
 if __name__ == "__main__":
     main()

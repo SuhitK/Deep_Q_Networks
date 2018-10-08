@@ -13,8 +13,8 @@ class DQN_Agent():
             self.env = gym.make(environment_name)
             self.init_state = self.env.reset()
             self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
-            self.epsilon = 0.5 #Epsilon used for epsilon-greedy policy
-            self.greedy_epsilon = 0.05 #Epsilon used for greedy policy
+            self.epsilon = 0.5              # Epsilon used for epsilon-greedy policy
+            self.greedy_epsilon = 0.05      # Epsilon used for greedy policy
 
     def epsilon_greedy_policy(self, q_values):
             # Creating epsilon greedy probabilities to sample from.
@@ -57,8 +57,6 @@ class DQN_Agent():
             transition_tuple = (self.env.env.state, action, reward, next_state, done)
             self.replay_memory.append(transition_tuple)
 
-
-
     def test(self, model_file=None):
             # Evaluate the performance of your agent over 100 episodes, by calculating cummulative rewards for the 100 episodes.
             # Here you need to interact with the environment, irrespective of whether you are using a memory.
@@ -78,5 +76,3 @@ class DQN_Agent():
                     state = next_state
                     if count == self.replay_memory.burn_in or done:
                         break
-
-
