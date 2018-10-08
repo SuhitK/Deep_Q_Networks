@@ -1,2 +1,5 @@
 **/*.mp4
 **/*.json
+**/*.vim
+DQN/__pycache__/*
+__pycache__/*
