@@ -14,13 +14,13 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
-isCUDA = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+useCUDA = torch.cuda.is_available()
 
 def weight_init(model):
 	if isinstance(model, nn.Linear):
-		nn.init.xavier_normal_(model.weight.data)
-		if model.bias is not None:
-			nn.init.xavier_normal_(model.bias.data)
+		nn.init.xavier_normal(model.weight.data)
+		# if model.bias is not None:
+		# 	nn.init.xavier_normal(model.bias.data)
 
 
 class CartPoleNetwork(nn.Module):
@@ -74,7 +74,7 @@ class QNetwork():
 		self.environment_name = environment_name
 
 		# Define model according to environment_name
-		if environment_name.equals('CartPole-v0'):
+		if environment_name == 'CartPole-v0':
 			self.policyModel = CartPoleNetwork()
 			self.targetModel = CartPoleNetwork()
 			self.lr = 1e-3
@@ -84,24 +84,23 @@ class QNetwork():
 			self.lr = 1e-4
 
 		# Set the GPU characteristics of the environment
-		self.policyModel = self.policyModel.to(isCUDA)
-		self.targetModel = self.targetModel.to(isCUDA)
+		if useCUDA:
+			self.policyModel = self.policyModel.cuda()
+			self.targetModel = self.targetModel.cuda()
 
 		# Initialize the model weights
 		self.policyModel.apply(weight_init)
-		self.targetModel.load_state_dict(policyModel.state_dict())
+		self.targetModel.load_state_dict(self.policyModel.state_dict())
 
 		# Define the Loss function and the Optimizer for the model
 		self.criterion = nn.MSELoss()
-		self.optimizer = nn.optim.Adam(self.policyModel.parameters(), lr=self.lr, momentum=0.9)
+		self.optimizer = torch.optim.Adam(self.policyModel.parameters(), lr=self.lr)
 
-	def forward(self, input_vector):
-		input_vector = Variable(torch.from_numpy(input_vector))
-
+	def forward(self, input_vector, mode='policyModel'):
 		if torch.cuda.is_available():
 			input_vector = input_vector.cuda()
 
-		return self.policyModel(input_vector)
+		return self.policyModel(input_vector) if mode == 'policyModel' else self.targetModel(input_vector)
 
 	def save_model_weights(self, suffix):
 		# Helper function to save your model / weights.
