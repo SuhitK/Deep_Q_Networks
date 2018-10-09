@@ -9,7 +9,7 @@ class Replay_Memory():
 
     def append(self, transition_tuple):
         """ Parameters:
-            transition_tuple: tuple(Current State, Action, Reward, Next State, is Terminal)"""
+            transition_tuple: tuple(Current State, Action, Reward, Next State)"""
         self.memory[self.index] = transition_tuple
         self.index = (self.index + 1) % self.memory_size
 
