@@ -89,8 +89,6 @@ class DQN_Agent():
 		states, next_states = self.to_variable(states), self.to_variable(next_states)
 		actions, rewards = self.to_variable(actions), self.to_variable(rewards)
 
-
-
 	def test(self, model_file=None):
 		# Evaluate the performance of your agent over 100 episodes, by calculating cummulative rewards for the 100 episodes.
 		# Here you need to interact with the environment, irrespective of whether you are using a memory.

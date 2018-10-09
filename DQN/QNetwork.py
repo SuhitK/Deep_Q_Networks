@@ -95,6 +95,13 @@ class QNetwork():
 		self.criterion = nn.MSELoss()
 		self.optimizer = nn.optim.Adam(self.policyModel.parameters(), lr=self.lr, momentum=0.9)
 
+	def forward(self, input_vector):
+		input_vector = Variable(torch.from_numpy(input_vector))
+
+		if torch.cuda.is_available():
+			input_vector = input_vector.cuda()
+
+		return self.policyModel(input_vector)
 
 	def save_model_weights(self, suffix):
 		# Helper function to save your model / weights.
