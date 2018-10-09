@@ -26,9 +26,10 @@ def computer(X, mean = None):
         
     
 def main():
+    np.random.seed(0)
     ## Q 4.2
     print ("Q 4.2\n")
-    pobject = pdistribution(a = -1., b = 1.)
+    pobject = pdistribution(a = -1., b = 1., seed = 0)
     for i in [10, 1000, 10000]:
         X = pobject.rvs(size = (i,))
         F = computef(X)
@@ -69,7 +70,7 @@ def main():
 
     # Q Distribution
     print ("Q Distribution")
-    qobject = qdistribution(a = -1., b = 1.)
+    qobject = qdistribution(a = -1., b = 1., seed = 0)
     FWQ = []
     for i in [10, 1000, 10000]:
         X = qobject.rvs(size = (i,))
@@ -88,21 +89,21 @@ def main():
     print ("N(3,1)")
     for iterable in range(3):
         print ("Samples = " + str(i[iterable]))
-        print ("Mean = " + str(np.mean(FW3[iterable])))
+        print ("Mean = " + str(np.mean(FW3[iterable]) * i[iterable]))
         print ("Variance = " + str(np.var(FW3[iterable])))
         print ("")
 
     print ("N(0,1)")
     for iterable in range(3):
         print ("Samples = " + str(i[iterable]))
-        print ("Mean = " + str(np.mean(FW0[iterable])))
+        print ("Mean = " + str(np.mean(FW0[iterable]) * i[iterable]))
         print ("Variance = " + str(np.var(FW0[iterable])))
         print ("")
 
     print ("Q Distribution")
     for iterable in range(3):
         print ("Samples = " + str(i[iterable]))
-        print ("Mean = " + str(np.mean(FWQ[iterable])))
+        print ("Mean = " + str(np.mean(FWQ[iterable]) * i[iterable]))
         print ("Variance = " + str(np.var(FWQ[iterable])))
         print ("")
 
