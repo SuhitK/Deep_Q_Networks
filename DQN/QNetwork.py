@@ -95,7 +95,7 @@ class QNetwork():
 
                 # Define the Loss function and the Optimizer for the model
                 self.criterion = nn.MSELoss()
-                self.optimizer = torch.optim.Adam(self.policyModel.parameters(), lr=self.lr)
+                self.optimizer = torch.optim.Adam(self.policyModel.parameters(), lr=self.lr, weight_decay=0.01)
 
         def forward(self, input_vector, mode='policyModel'):
                 return self.policyModel(input_vector) if mode == 'policyModel' else self.targetModel(input_vector)
