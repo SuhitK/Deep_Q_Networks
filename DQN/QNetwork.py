@@ -27,17 +27,16 @@ class CartPoleNetwork(nn.Module):
 	def __init__(self):
 		super(CartPoleNetwork, self).__init__()
 		self.ffnn1 = nn.Linear(4, 64)
-		self.ffnn2 = nn.Linear(64, 128)
-		self.ffnn3 = nn.Linear(128, 512)
-		self.ffnn4 = nn.Linear(512, 128)
-		self.ffnn5 = nn.Linear(128, 2)
+		self.ffnn2 = nn.Linear(64, 64)
+		self.ffnn3 = nn.Linear(64, 64)
+		self.ffnn4 = nn.Linear(64, 2)
+
 
 	def forward(self, x):
 		x = F.relu(self.ffnn1(x))
 		x = F.relu(self.ffnn2(x))
 		x = F.relu(self.ffnn3(x))
-		x = F.relu(self.ffnn4(x))
-		x = self.ffnn5(x)
+		x = self.ffnn4(x)
 
 		return x
 
@@ -104,8 +103,8 @@ class QNetwork():
 
 	def save_model_weights(self, suffix):
 		# Helper function to save your model / weights.
-		torch.save(self.policyModel.state_dict(), 'policyModel_{}_{}'.format(self.environment_name, suffix))
-		torch.save(self.policyModel.state_dict(), 'targetModel_{}_{}'.format(self.environment_name, suffix))
+		torch.save(self.policyModel.state_dict(), 'PolicyModel/{}'.format(suffix))
+		torch.save(self.policyModel.state_dict(), 'TargetModel/{}'.format(suffix))
 
 	def load_model(self, model_file):
 		# Helper function to load an existing model.
@@ -116,3 +115,4 @@ class QNetwork():
 	def load_model_weights(self, weight_file):
 		# Helper funciton to load model weights.
 		self.policyModel.load_state_dict(torch.load(weight_file))
+		self.equate_target_model_weights()

@@ -21,7 +21,7 @@ class DQN_Agent():
 		self.epsilon = args.epsilon_init
 		self.greedy_epsilon = self.args.greedy_epsilon
 		self.env = gym.make(self.args.env)
-		self.init_state = self.env.reset()
+		self.env = gym.wrappers.Monitor(self.env, self.args.env, force=True)
 		self.dqnNetwork = QNetwork(self.args.env)
 		self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
 
@@ -31,9 +31,10 @@ class DQN_Agent():
 		self.decay = (self.epsilon - self.args.epsilon_stop) / self.args.epsilon_iter
 
 		self.use_cuda = torch.cuda.is_available()
+		self.env_is_terminal = True
 
 	def decay_epsilon(self):
-		# self.epsilon *= self.decay
+		self.epsilon *= self.decay
 		self.epsilon = max(self.epsilon, self.args.epsilon_stop)
 
 	def epsilon_greedy_policy(self, state):
@@ -68,10 +69,21 @@ class DQN_Agent():
 		return possible_actions[np.random.choice([0, 1], p=[self.greedy_epsilon, (1 - self.greedy_epsilon)])]
 
 
-	def get_action(self, state):
+	def get_action(self, state, mode='policyModel'):
 		state = Variable(state)
-		output = self.dqnNetwork.forward(state)
+		output = self.dqnNetwork.forward(state, mode=mode)
 		return output.detach().data.max(1)[1].cpu().view(1, 1)
+
+	def get_init_state(self):
+		if self.env_is_terminal:
+			state = self.map_cuda(self.get_state_tensor(self.env.reset()))
+		else:
+			action = self.env.action_space.sample()
+			state, reward, is_terminal, info = self.env.step(action)
+			state = self.map_cuda(self.get_state_tensor(state))
+			if is_terminal:
+				state = self.map_cuda(self.get_state_tensor(self.env.reset()))
+		return state
 
 	def get_state_tensor(self, state):
 		return torch.from_numpy(state.reshape((-1, 4))).float()
@@ -88,13 +100,14 @@ class DQN_Agent():
 		# transitions to memory, while also updating your model.
 
 		# TODO: Model update code comes here and also predicting q for current state
-		time = str(datetime.now().time())
-		avgRewardFilename = "Average_Rewards_" + self.args.env + "_" + time + ".csv"
+		time = datetime.now().time()
+		avgRewardFilename = "RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.env, time)
 		avgRewardFile = open(avgRewardFilename, 'w')
+		steps = 0
 
 		for episode in range(self.args.epi):
-			state = self.map_cuda(self.get_state_tensor(self.env.reset()))
-			steps = 0
+			state = self.get_init_state()
+			episode_steps = 0
 
 			while True:
 				if self.args.render:
@@ -103,35 +116,36 @@ class DQN_Agent():
 				action = self.map_cuda(self.epsilon_greedy_policy(state))
 				self.decay_epsilon()
 
-				next_state, reward, is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
+				next_state, reward, self.env_is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
 
 				next_state = self.map_cuda(self.get_state_tensor(next_state))
-				terminal = self.map_cuda(torch.LongTensor([is_terminal]))
+				terminal = self.map_cuda(torch.LongTensor([self.env_is_terminal]))
 				reward = self.map_cuda(torch.Tensor([reward]))
 
 				transition = (state, action, reward, next_state, terminal)
 				self.replay_memory.append(transition)
 
 				state = next_state
+				episode_steps += 1
 				steps += 1
 
 				self.train_QNetwork()
 
-				if self.args.env == 'CartPole-v0' and steps == 200:
-					break
-				if is_terminal:
+				if self.env_is_terminal or (self.args.env == 'CartPole-v0' and episode_steps == 200):
 					break
 
-			if (episode < 500 and episode % 50 == 49) or episode % 500 == 499:
-					self.dqnNetwork.equate_target_model_weights()
+			# if (episode < 500 and episode % 50 == 49) or episode % 500 == 499:
+			# 		self.dqnNetwork.equate_target_model_weights()
 
-			if episode % 100 == 99:
+			if episode % self.args.test_epi == self.args.test_epi - 1:
+				self.dqnNetwork.equate_target_model_weights()
 				avg_reward = self.test()
 				avgRewardFile.write('{}\n'.format(avg_reward))
 				print('Episode: {}\tAvg Reward: {}'.format(episode+1, avg_reward))
 
-			if episode % 2000 == 1999:
-				self.dqnNetwork.save_model_weights(suffix='epi{}_rew{:.4f}.pkl'.format(episode, avg_reward))
+			if (episode % self.args.save_epi == self.args.save_epi - 1) or (avg_reward > 190.0):
+				self.dqnNetwork.save_model_weights(suffix='{}_epi{}_rew{:.4f}_{}.pkl'.format(self.args.env, episode+1, avg_reward, time))
+
 		avgRewardFile.close()
 
 	def train_QNetwork(self):
@@ -160,8 +174,8 @@ class DQN_Agent():
 		# Here you need to interact with the environment, irrespective of whether you are using a memory.
 		reward_sum = 0
 		for i in range(self.args.test_epi):
-			state = self.map_cuda(self.get_state_tensor(self.env.reset()))
-			steps = 0
+			state = self.get_init_state()
+			episode_steps = 0
 
 			while True:
 				if self.args.render:
@@ -169,27 +183,28 @@ class DQN_Agent():
 
 				action = self.map_cuda(self.get_action(state))
 
-				next_state, reward, is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
+				next_state, reward, self.env_is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
 				state = self.map_cuda(self.get_state_tensor(next_state))
 				reward_sum += reward
+				episode_steps += 1
 
-				if self.args.env == 'CartPole-v0' and steps == 200:
+				if self.env_is_terminal or (self.args.env == 'CartPole-v0' and episode_steps == 200):
 					break
-				if is_terminal:
-					break
+			print('Steps: {}'.format(episode_steps))
 
-		return reward_sum / self.args.test_epi
+		return np.mean(self.env.get_episode_rewards()[-100:])
+		# return reward_sum / self.args.test_epi
 
 	def burn_in_memory(self):
 		# Initialize your replay memory with a burn_in number of episodes / transitions.
-		state = self.map_cuda(self.get_state_tensor(self.env.reset()))
+		state = self.get_init_state()
 
 		for _ in range(self.replay_memory.burn_in):
 			action = self.map_cuda(torch.LongTensor([[random.randrange(self.num_actions)]]))
-			next_state, reward, is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
+			next_state, reward, self.env_is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
 
 			next_state = self.map_cuda(self.get_state_tensor(next_state))
-			terminal = self.map_cuda(torch.LongTensor([is_terminal]))
+			terminal = self.map_cuda(torch.LongTensor([self.env_is_terminal]))
 			reward = self.map_cuda(torch.Tensor([reward]))
 
 			transition = (state, action, reward, next_state, terminal)
@@ -197,5 +212,8 @@ class DQN_Agent():
 
 			state = next_state
 
-			if is_terminal:
+			if self.env_is_terminal:
 				state = self.map_cuda(self.get_state_tensor(self.env.reset()))
+
+	def agent_close(self):
+		self.env.env.close()
