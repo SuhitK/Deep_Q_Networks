@@ -74,7 +74,7 @@ class DQN_Agent():
                 return output.detach().data.max(1)[1].cpu().view(1, 1)
 
         def get_state_tensor(self, state):
-                return torch.from_numpy(state.reshape((-1, 4))).float()
+                return torch.from_numpy(state.reshape((-1, state.shape[0]))).float()
 
         def map_cuda(self, tensor):
                 return tensor.cuda() if self.use_cuda else tensor
@@ -130,6 +130,7 @@ class DQN_Agent():
                                         self.dqnNetwork.equate_target_model_weights()
 
                         if episode % 100 == 99:
+                                # self.args.render = True
                                 avg_reward = self.test()
                                 avgRewardFile.write('{}\n'.format(avg_reward))
                                 print('Episode: {}\tAvg Reward: {}'.format(episode+1, avg_reward))
@@ -181,6 +182,7 @@ class DQN_Agent():
                                         break
                                 if is_terminal:
                                         break
+                        # self.args.render = False
 
                 return reward_sum / self.args.test_epi
 
