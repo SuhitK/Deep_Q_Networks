@@ -60,9 +60,9 @@ class DQN_Agent():
 
 		return np.random.choice(actions, p=policy)
 
-	def get_action(self, state):
+	def get_action(self, state, mode='targetModel'):
 		state = Variable(state)
-		output = self.dqnNetwork.forward(state, mode='targetModel')
+		output = self.dqnNetwork.forward(state, mode=mode)
 		return output.detach().data.max(1)[1].cpu().view(1, 1)
 
 	def get_state_tensor(self, state):
@@ -82,7 +82,7 @@ class DQN_Agent():
 		# TODO: Model update code comes here and also predicting q for current state
 		for episode in range(self.args.epi):
 			state = self.map_cuda(self.get_state_tensor(self.env.reset()))
-			# steps = 0
+			steps = 0
 
 			while True:
 				if self.args.render:
@@ -101,14 +101,15 @@ class DQN_Agent():
 				self.replay_memory.append(transition)
 
 				state = next_state
-				# steps += 1
 
 				self.train_QNetwork()
 
-				if is_terminal:
+				if is_terminal or steps == 200:
 					break
 
-			if episode % 1000 == 999:
+				steps += 1
+
+			if episode % 500 == 499:
 				self.dqnNetwork.equate_target_model_weights()
 
 			if episode % 100 == 99:
@@ -116,7 +117,8 @@ class DQN_Agent():
 				print('Episode: {}\tAvg Reward: {}'.format(episode+1, avg_reward))
 
 			if episode % 2000 == 1999:
-				self.dqnNetwork.save_model_weights(suffix='epi{}_rew{:.4f}'.format(episode, avg_reward))
+				self.dqnNetwork.save_model_weights(suffix='epi{}_rew{:.4f}'.format(episode+1, avg_reward))
+		self.dqnNetwork.save_model_weights(suffix='finalepi_rew{:.4f}'.format(avg_reward))
 
 	def train_QNetwork(self):
 		self.dqnNetwork.optimizer.zero_grad()
@@ -145,6 +147,7 @@ class DQN_Agent():
 		reward_sum = 0
 		for i in range(self.args.test_epi):
 			state = self.map_cuda(self.get_state_tensor(self.env.reset()))
+			steps = 0
 
 			while True:
 				if self.args.render:
@@ -156,8 +159,10 @@ class DQN_Agent():
 				state = self.map_cuda(self.get_state_tensor(next_state))
 				reward_sum += reward
 
-				if is_terminal:
+				if is_terminal or steps == 200:
 					break
+
+				steps += 1
 
 		return reward_sum / self.args.test_epi
 

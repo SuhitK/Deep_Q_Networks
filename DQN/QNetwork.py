@@ -27,17 +27,15 @@ class CartPoleNetwork(nn.Module):
 	def __init__(self):
 		super(CartPoleNetwork, self).__init__()
 		self.ffnn1 = nn.Linear(4, 64)
-		self.ffnn2 = nn.Linear(64, 128)
-		self.ffnn3 = nn.Linear(128, 512)
-		self.ffnn4 = nn.Linear(512, 128)
-		self.ffnn5 = nn.Linear(128, 2)
+		self.ffnn2 = nn.Linear(64, 64)
+		self.ffnn3 = nn.Linear(64, 64)
+		self.ffnn4 = nn.Linear(64, 2)
 
 	def forward(self, x):
 		x = F.relu(self.ffnn1(x))
 		x = F.relu(self.ffnn2(x))
 		x = F.relu(self.ffnn3(x))
 		x = F.relu(self.ffnn4(x))
-		x = F.relu(self.ffnn5(x))
 
 		return x
 
