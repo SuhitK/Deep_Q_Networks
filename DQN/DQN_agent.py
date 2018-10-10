@@ -121,8 +121,12 @@ class DQN_Agent():
                                 if is_terminal:
                                         break
 
-                        if episode % 10 == 9:
-                                self.dqnNetwork.equate_target_model_weights()
+                        if episode < 500:
+                            if episode % 50 == 49:
+                                    self.dqnNetwork.equate_target_model_weights()
+                        else:
+                            if episode % 500 == 499:
+                                    self.dqnNetwork.equate_target_model_weights()
 
                         if episode % 100 == 99:
                                 avg_reward = self.test()
