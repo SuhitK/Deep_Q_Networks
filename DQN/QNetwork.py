@@ -20,22 +20,24 @@ def weight_init(model):
 	if isinstance(model, nn.Linear):
 		nn.init.xavier_normal(model.weight.data)
 		# if model.bias is not None:
-		# 	nn.init.xavier_normal(model.bias.data)
+		#       nn.init.xavier_normal(model.bias.data)
 
 
 class CartPoleNetwork(nn.Module):
 	def __init__(self):
 		super(CartPoleNetwork, self).__init__()
 		self.ffnn1 = nn.Linear(4, 64)
-		self.ffnn2 = nn.Linear(64, 64)
-		self.ffnn3 = nn.Linear(64, 64)
-		self.ffnn4 = nn.Linear(64, 2)
+		self.ffnn2 = nn.Linear(64, 128)
+		self.ffnn3 = nn.Linear(128, 512)
+		self.ffnn4 = nn.Linear(512, 128)
+		self.ffnn5 = nn.Linear(128, 2)
 
 	def forward(self, x):
 		x = F.relu(self.ffnn1(x))
 		x = F.relu(self.ffnn2(x))
 		x = F.relu(self.ffnn3(x))
 		x = F.relu(self.ffnn4(x))
+		x = self.ffnn5(x)
 
 		return x
 
@@ -54,7 +56,7 @@ class MountainCarNetwork(nn.Module):
 		x = F.relu(self.ffnn2(x))
 		x = F.relu(self.ffnn3(x))
 		x = F.relu(self.ffnn4(x))
-		x = F.relu(self.ffnn5(x))
+		x = self.ffnn5(x)
 
 		return x
 
@@ -75,7 +77,7 @@ class QNetwork():
 		if environment_name == 'CartPole-v0':
 			self.policyModel = CartPoleNetwork()
 			self.targetModel = CartPoleNetwork()
-			self.lr = 1e-3
+			self.lr = 1e-4
 		else:
 			self.policyModel = MountainCarNetwork()
 			self.targetModel = MountainCarNetwork()
