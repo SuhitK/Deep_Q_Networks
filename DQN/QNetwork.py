@@ -90,28 +90,28 @@ class QNetwork():
 
 		# Initialize the model weights
 		self.policyModel.apply(weight_init)
-		self.targetModel.load_state_dict(self.policyModel.state_dict())
+		self.equate_target_model_weights()
 
 		# Define the Loss function and the Optimizer for the model
 		self.criterion = nn.MSELoss()
 		self.optimizer = torch.optim.Adam(self.policyModel.parameters(), lr=self.lr)
 
 	def forward(self, input_vector, mode='policyModel'):
-		if torch.cuda.is_available():
-			input_vector = input_vector.cuda()
-
 		return self.policyModel(input_vector) if mode == 'policyModel' else self.targetModel(input_vector)
+
+	def equate_target_model_weights(self):
+		self.targetModel.load_state_dict(self.policyModel.state_dict())
 
 	def save_model_weights(self, suffix):
 		# Helper function to save your model / weights.
-		torch.save(self.policyModel.state_dict(), '{}_{}'.format(self.environment_name, suffix))
+		torch.save(self.policyModel.state_dict(), 'policyModel_{}_{}'.format(self.environment_name, suffix))
+		torch.save(self.policyModel.state_dict(), 'targetModel_{}_{}'.format(self.environment_name, suffix))
 
 	def load_model(self, model_file):
 		# Helper function to load an existing model.
 		model_dict = torch.load(model_file)
 		self.policyModel.load_state_dict(model_dict['state_dict'])
 		self.optimizer.parameters = model_dict['optimizer_params']
-
 
 	def load_model_weights(self, weight_file):
 		# Helper funciton to load model weights.
