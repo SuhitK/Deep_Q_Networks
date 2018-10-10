@@ -135,7 +135,7 @@ class DQN_Agent():
                                 print('Episode: {}\tAvg Reward: {}'.format(episode+1, avg_reward))
 
                         if episode % 2000 == 1999:
-                                self.dqnNetwork.save_model_weights(suffix='epi{}_rew{:.4f}'.format(episode, avg_reward))
+                                self.dqnNetwork.save_model_weights(suffix='epi{}_rew{:.4f}.pkl'.format(episode, avg_reward))
 
         def train_QNetwork(self):
                 self.dqnNetwork.optimizer.zero_grad()
