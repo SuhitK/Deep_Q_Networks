@@ -103,6 +103,7 @@ class DQN_Agent():
 		time = datetime.now().time()
 		avgRewardFilename = "RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.env, time)
 		avgRewardFile = open(avgRewardFilename, 'w')
+		avg_reward = 0
 		steps = 0
 
 		for episode in range(self.args.epi):
