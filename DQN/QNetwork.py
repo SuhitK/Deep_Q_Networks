@@ -26,10 +26,10 @@ def weight_init(model):
 class CartPoleNetwork(nn.Module):
 	def __init__(self):
 		super(CartPoleNetwork, self).__init__()
-		self.ffnn1 = nn.Linear(4, 64)
-		self.ffnn2 = nn.Linear(64, 64)
-		self.ffnn3 = nn.Linear(64, 64)
-		self.ffnn4 = nn.Linear(64, 2)
+		self.ffnn1 = nn.Linear(4, 128)
+		self.ffnn2 = nn.Linear(128, 128)
+		self.ffnn3 = nn.Linear(128, 128)
+		self.ffnn4 = nn.Linear(128, 2)
 
 
 	def forward(self, x):

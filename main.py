@@ -23,6 +23,7 @@ def parse_arguments():
 	parser.add_argument('--eps_iter', dest='epsilon_iter', type=int, default=10000)
 	parser.add_argument('--eps_greedy', dest='greedy_epsilon', type=int, default=0.05)
 	parser.add_argument('--reset_dir', dest='reset_dir', type=bool, default=True)
+	parser.add_argument('--double_dqn', dest='double_dqn', action='store_true')
 	return parser.parse_args()
 
 

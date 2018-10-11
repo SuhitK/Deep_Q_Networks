@@ -157,11 +157,18 @@ class DQN_Agent():
 
 		states, actions, rewards, terminals = map(lambda x: self.map_cuda(Variable(torch.cat(x))), [states, actions, rewards, terminals])
 
-		pred_values = torch.gather(self.dqnNetwork.forward(states), 1, actions)
+		pred_action = self.dqnNetwork.forward(states)
+		pred_values = torch.gather(pred_action, 1, actions)
 		next_values = self.map_cuda(Variable(torch.zeros(self.args.bsz)))
 
-		non_terminal_next_states = Variable(torch.cat([state for idx, state in enumerate(next_states) if terminals.data.cpu().numpy()[idx] == 0]))
-		next_values[terminals == 0] = self.dqnNetwork.forward(non_terminal_next_states, mode = 'targetModel').max(1)[0].detach()
+		if self.args.double_dqn:
+			actions = pred_action.data.max(1)[1].view(-1, 1)
+			next_values = self.dqnNetwork.forward(self.map_cuda(Variable(torch.cat(next_states))), mode = 'targetModel')
+			next_values = torch.gather(next_values, 1, Variable(actions)).detach().view(-1)
+			next_values[terminals == 1] = 0
+		else:
+			non_terminal_next_states = Variable(torch.cat([state for idx, state in enumerate(next_states) if terminals.data.cpu().numpy()[idx] == 0]))
+			next_values[terminals == 0] = self.dqnNetwork.forward(non_terminal_next_states, mode = 'targetModel').max(1)[0].detach()
 		true_values = (rewards + (next_values * self.args.gamma)).view(-1, 1)
 
 		loss = self.dqnNetwork.criterion(pred_values, true_values)
