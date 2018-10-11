@@ -2,6 +2,7 @@
 **/*.json
 **/*.vim
 DQN/__pycache__/*
-__pycache__/
+__pycache__/*
 *.csv
 *.pkl
+__pycache__/
