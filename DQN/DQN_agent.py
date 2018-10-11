@@ -33,20 +33,17 @@ class DQN_Agent():
 		self.use_cuda = torch.cuda.is_available()
 		self.env_is_terminal = True
 
+	def load_model(self, model_file, weights=False):
+		if weights:
+			self.dqnNetwork.load_model_weights(model_file)
+		else:
+			self.dqnNetwork.load_model(model_file)
+
 	def decay_epsilon(self):
-		self.epsilon *= self.decay
+		# self.epsilon *= self.decay
 		self.epsilon = max(self.epsilon, self.args.epsilon_stop)
 
 	def epsilon_greedy_policy(self, state):
-		# Creating epsilon greedy probabilities to sample from.
-		# best_action = np.argmax(q_values)
-
-		# policy = np.zeros((self.num_actions))
-		# policy[:] = self.epsilon / self.num_actions
-		# policy[best_action] = 1 - self.epsilon
-
-		# return np.random.choice(actions, p=policy)
-
 		possible_actions = []
 		possible_actions.append(torch.LongTensor([[random.randrange(self.num_actions)]]))
 		possible_actions.append(self.get_action(state))
@@ -54,22 +51,18 @@ class DQN_Agent():
 		return possible_actions[np.random.choice([0, 1], p=[self.epsilon, (1 - self.epsilon)])]
 
 	def greedy_policy(self, q_values):
-		# Creating greedy policy for test time.
-		# best_action = np.argmax(q_values)
-
-		# policy = np.zeros((self.num_actions))
-		# policy[:] = self.greedy_epsilon / self.num_actions
-		# policy[best_action] = 1 - self.greedy_epsilon
-
-		# return np.random.choice(actions, p=policy)
 		possible_actions = []
 		possible_actions.append(torch.LongTensor([[random.randrange(self.num_actions)]]))
 		possible_actions.append(self.get_action(state))
 
 		return possible_actions[np.random.choice([0, 1], p=[self.greedy_epsilon, (1 - self.greedy_epsilon)])]
 
-
 	def get_action(self, state, mode='policyModel'):
+		state = Variable(state)
+		output = self.dqnNetwork.forward(state, mode=mode)
+		return output.detach().data.max(1)[1].cpu().view(1, 1)
+
+	def get_action_lookahead(self, state, mode='policyModel'):
 		state = Variable(state)
 		output = self.dqnNetwork.forward(state, mode=mode)
 		return output.detach().data.max(1)[1].cpu().view(1, 1)
@@ -79,10 +72,11 @@ class DQN_Agent():
 			state = self.map_cuda(self.get_state_tensor(self.env.reset()))
 		else:
 			action = self.env.action_space.sample()
-			state, reward, is_terminal, info = self.env.step(action)
+			state, reward, self.env_is_terminal, info = self.env.step(action)
 			state = self.map_cuda(self.get_state_tensor(state))
-			if is_terminal:
-				state = self.map_cuda(self.get_state_tensor(self.env.reset()))
+			if self.env_is_terminal:
+				# state = self.map_cuda(self.get_state_tensor(self.env.reset()))
+				state = self.get_init_state()
 		return state
 
 	def get_state_tensor(self, state):
