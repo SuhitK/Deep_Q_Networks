@@ -22,7 +22,7 @@ class DQN_Agent():
 		self.greedy_epsilon = self.args.greedy_epsilon
 		self.env = gym.make(self.args.env)
 		self.env = gym.wrappers.Monitor(self.env, self.args.env, force=True)
-		self.dqnNetwork = QNetwork(self.args.env)
+		self.dqnNetwork = QNetwork(self.args.env, self.args.duel_dqn)
 		self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
 
 		self.num_observations = self.env.observation_space.shape[0]
@@ -36,6 +36,8 @@ class DQN_Agent():
 		# torch.manual_seed(0)
 		# self.env.seed(0)
 		# random.seed(0)
+		self.dqnNetwork.print_model()
+		self.dqnNetwork.print_model_summary((self.args.bsz, self.num_observations))
 
 	def load_model(self, model_file, weights=False):
 		if weights:
@@ -63,12 +65,12 @@ class DQN_Agent():
 
 	def get_action(self, state, mode='policyModel'):
 		state = Variable(state)
-		output = self.dqnNetwork.forward(state, mode=mode, duel=self.args.duel_dqn)
+		output = self.dqnNetwork.forward(state, mode=mode)
 		return output.detach().data.max(1)[1].cpu().view(1, 1)
 
 	def get_action_lookahead(self, state, mode='policyModel'):
 		state = Variable(state)
-		output = self.dqnNetwork.forward(state, mode=mode, duel=self.args.duel_dqn)
+		output = self.dqnNetwork.forward(state, mode=mode)
 		return output.detach().data.max(1)[1].cpu().view(1, 1)
 
 	def get_init_state(self):
@@ -155,18 +157,18 @@ class DQN_Agent():
 
 		states, actions, rewards, terminals = map(lambda x: self.map_cuda(Variable(torch.cat(x))), [states, actions, rewards, terminals])
 
-		pred_action = self.dqnNetwork.forward(states, duel=self.args.duel_dqn)
+		pred_action = self.dqnNetwork.forward(states)
 		pred_values = torch.gather(pred_action, 1, actions)
 		next_values = self.map_cuda(Variable(torch.zeros(self.args.bsz)))
 
 		if self.args.double_dqn:
 			actions = pred_action.data.max(1)[1].view(-1, 1)
-			next_values = self.dqnNetwork.forward(self.map_cuda(Variable(torch.cat(next_states))), mode='targetModel', duel=self.args.duel_dqn)
+			next_values = self.dqnNetwork.forward(self.map_cuda(Variable(torch.cat(next_states))), mode='targetModel')
 			next_values = torch.gather(next_values, 1, Variable(actions)).detach().view(-1)
 			next_values[terminals == 1] = 0
 		else:
 			non_terminal_next_states = Variable(torch.cat([state for idx, state in enumerate(next_states) if terminals.data.cpu().numpy()[idx] == 0]))
-			next_values[terminals == 0] = self.dqnNetwork.forward(non_terminal_next_states, mode='targetModel', duel=self.args.duel_dqn).max(1)[0].detach()
+			next_values[terminals == 0] = self.dqnNetwork.forward(non_terminal_next_states, mode='targetModel').max(1)[0].detach()
 		true_values = (rewards + (next_values * self.args.gamma)).view(-1, 1)
 
 		loss = self.dqnNetwork.criterion(pred_values, true_values)

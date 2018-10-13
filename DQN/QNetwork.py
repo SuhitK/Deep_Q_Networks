@@ -24,44 +24,55 @@ def weight_init(model):
 
 
 class CartPoleNetwork(nn.Module):
-	def __init__(self):
+	def __init__(self, duel):
 		super(CartPoleNetwork, self).__init__()
+		self.duel = duel
 		self.ffnn1 = nn.Linear(4, 128)
 		self.ffnn2 = nn.Linear(128, 128)
 		self.ffnn3 = nn.Linear(128, 128)
 		self.ffnn4 = nn.Linear(128, 2)
-		self.value = nn.Linear(128, 1)
 
-	def forward(self, x, duel=False):
+		if self.duel:
+			self.value = nn.Linear(128, 1)
+
+	def forward(self, x):
 		x = F.relu(self.ffnn1(x))
 		x = F.relu(self.ffnn2(x))
 		x = F.relu(self.ffnn3(x))
 		q_value = self.ffnn4(x)
-		value = self.value(x)
 
-		if duel:
+		if self.duel:
+			value = self.value(x)
 			q_value = value.expand_as(q_value) + (q_value - q_value.mean(1, keepdim=True).expand_as(q_value))
 
 		return q_value
 
 
 class MountainCarNetwork(nn.Module):
-	def __init__(self):
-		super(CartPoleNetwork, self).__init__()
+	def __init__(self, duel):
+		super(MountainCarNetwork, self).__init__()
+		self.duel = duel
 		self.ffnn1 = nn.Linear(2, 64)
 		self.ffnn2 = nn.Linear(64, 128)
 		self.ffnn3 = nn.Linear(128, 512)
-		self.ffnn4 = nn.Linear(512, 128)
-		self.ffnn5 = nn.Linear(128, 3)
+		self.ffnn4 = nn.Linear(512, 3)
+
+		if self.duel:
+			self.value = nn.Linear(128, 1)
 
 	def forward(self, x):
 		x = F.relu(self.ffnn1(x))
 		x = F.relu(self.ffnn2(x))
 		x = F.relu(self.ffnn3(x))
 		x = F.relu(self.ffnn4(x))
-		x = self.ffnn5(x)
 
-		return x
+		q_value = self.ffnn4(x)
+
+		if self.duel:
+			value = self.value(x)
+			q_value = value.expand_as(q_value) + (q_value - q_value.mean(1, keepdim=True).expand_as(q_value))
+
+		return q_value
 
 
 class QNetwork():
@@ -78,12 +89,12 @@ class QNetwork():
 
 		# Define model according to environment_name
 		if environment_name == 'CartPole-v0':
-			self.policyModel = CartPoleNetwork()
-			self.targetModel = CartPoleNetwork()
+			self.policyModel = CartPoleNetwork(duel)
+			self.targetModel = CartPoleNetwork(duel)
 			self.lr = 1e-4
 		else:
-			self.policyModel = MountainCarNetwork()
-			self.targetModel = MountainCarNetwork()
+			self.policyModel = MountainCarNetwork(duel)
+			self.targetModel = MountainCarNetwork(duel)
 			self.lr = 1e-4
 
 		# Set the GPU characteristics of the environment
@@ -100,8 +111,8 @@ class QNetwork():
 		self.optimizer = torch.optim.Adam(self.policyModel.parameters(), lr=self.lr, weight_decay=1e-2)
 		# self.optimizer = torch.optim.RMSprop(self.policyModel.parameters(), lr=self.lr, weight_decay=1e-2, momentum=0.9)
 
-	def forward(self, input_vector, mode='policyModel', duel=False):
-		return self.policyModel(input_vector, duel) if mode == 'policyModel' else self.targetModel(input_vector, duel)
+	def forward(self, input_vector, mode='policyModel'):
+		return self.policyModel(input_vector) if mode == 'policyModel' else self.targetModel(input_vector)
 
 	def equate_target_model_weights(self):
 		self.targetModel.load_state_dict(self.policyModel.state_dict())
@@ -121,3 +132,15 @@ class QNetwork():
 		# Helper funciton to load model weights.
 		self.policyModel.load_state_dict(torch.load(weight_file))
 		self.equate_target_model_weights()
+
+	def print_model(self):
+		print(self.policyModel)
+		print('\n\n')
+
+	def print_model_summary(self, *input_size):
+		try:
+			from torchsummary import summary
+			summary(self.policyModel, *input_size)
+			print('\n\n')
+		except ImportError as e:
+			pass
