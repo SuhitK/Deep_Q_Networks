@@ -86,7 +86,7 @@ class DQN_Agent():
 		return state
 
 	def get_state_tensor(self, state):
-		return torch.from_numpy(state.reshape((-1, 4))).float()
+		return torch.from_numpy(state.reshape((-1, self.num_observations))).float()
 
 	def map_cuda(self, tensor):
 		return tensor.cuda() if self.use_cuda else tensor
@@ -189,7 +189,7 @@ class DQN_Agent():
 				if self.args.render:
 					self.env.render()
 
-				action = self.map_cuda(self.get_action(state))
+				action = self.map_cuda(self.greedy_policy(state))
 
 				next_state, reward, self.env_is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
 				state = self.map_cuda(self.get_state_tensor(next_state))
@@ -200,7 +200,7 @@ class DQN_Agent():
 					break
 			print('Steps: {}'.format(episode_steps))
 
-		return np.mean(self.env.get_episode_rewards()[-100:])
+		return np.mean(self.env.get_episode_rewards()[-self.args.test_epi:])
 		# return reward_sum / self.args.test_epi
 
 	def burn_in_memory(self):

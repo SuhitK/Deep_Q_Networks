@@ -55,7 +55,8 @@ class MountainCarNetwork(nn.Module):
 		self.ffnn1 = nn.Linear(2, 64)
 		self.ffnn2 = nn.Linear(64, 128)
 		self.ffnn3 = nn.Linear(128, 512)
-		self.ffnn4 = nn.Linear(512, 3)
+		self.ffnn4 = nn.Linear(512, 128)
+		self.ffnn5 = nn.Linear(128, 3)
 
 		if self.duel:
 			self.value = nn.Linear(128, 1)
@@ -66,7 +67,7 @@ class MountainCarNetwork(nn.Module):
 		x = F.relu(self.ffnn3(x))
 		x = F.relu(self.ffnn4(x))
 
-		q_value = self.ffnn4(x)
+		q_value = self.ffnn5(x)
 
 		if self.duel:
 			value = self.value(x)
@@ -95,7 +96,7 @@ class QNetwork():
 		else:
 			self.policyModel = MountainCarNetwork(duel)
 			self.targetModel = MountainCarNetwork(duel)
-			self.lr = 1e-4
+			self.lr = 5e-4
 
 		# Set the GPU characteristics of the environment
 		if useCUDA:

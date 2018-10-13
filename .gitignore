@@ -8,3 +8,4 @@
 Models/**
 __pycache__/**
 **/__pycache__
+module_requirements.py
