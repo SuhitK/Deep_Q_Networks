@@ -56,7 +56,7 @@ class DQN_Agent():
 
 		return possible_actions[np.random.choice([0, 1], p=[self.epsilon, (1 - self.epsilon)])]
 
-	def greedy_policy(self, q_values):
+	def greedy_policy(self, state):
 		possible_actions = []
 		possible_actions.append(torch.LongTensor([[random.randrange(self.num_actions)]]))
 		possible_actions.append(self.get_action(state))
