@@ -138,7 +138,7 @@ class DQN_Agent():
 			# if (episode < 500 and episode % 50 == 49) or episode % 500 == 499:
 			# 		self.dqnNetwork.equate_target_model_weights()
 
-			if episode % self.args.test_epi == self.args.test_epi - 1:
+			if episode % self.args.test_every == self.args.test_every - 1:
 				self.dqnNetwork.equate_target_model_weights()
 				avg_reward = self.test()
 				avgRewardFile.write('{}\n'.format(avg_reward))

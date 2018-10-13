@@ -17,6 +17,7 @@ def parse_arguments():
 	parser.add_argument('--burn_in', dest='burn_in', type=int, default=10000)
 	parser.add_argument('--batch_size', dest='bsz', type=int, default=32)
 	parser.add_argument('--episodes', dest='epi', type=int, default=10000)
+	parser.add_argument('--test_every', dest='test_every', type=int, default=100)
 	parser.add_argument('--test_episodes', dest='test_epi', type=int, default=20)
 	parser.add_argument('--save_episodes', dest='save_epi', type=int, default=100)
 	parser.add_argument('--eps_init', dest='epsilon_init', type=float, default=0.5)
