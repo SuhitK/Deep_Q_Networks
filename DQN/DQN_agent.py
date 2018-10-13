@@ -142,7 +142,7 @@ class DQN_Agent():
 				self.dqnNetwork.equate_target_model_weights()
 				avg_reward = self.test()
 				avgRewardFile.write('{}\n'.format(avg_reward))
-				print('Episode: {}\tAvg Reward: {}'.format(episode+1, avg_reward))
+				print('Train Episode: {}\tAvg. Test Reward: {}'.format(episode+1, avg_reward))
 
 			if (episode % self.args.save_epi == self.args.save_epi - 1) or (avg_reward > 190.0 and episode % 100 == 99):
 				self.dqnNetwork.save_model_weights(suffix='{}_epi{}_rew{:.4f}_{}.pkl'.format(self.args.env, episode+1, avg_reward, time))
