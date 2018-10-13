@@ -18,9 +18,9 @@ useCUDA = torch.cuda.is_available()
 
 def weight_init(model):
 	if isinstance(model, nn.Linear):
-		nn.init.xavier_normal(model.weight.data)
+		nn.init.xavier_normal_(model.weight.data)
 		# if model.bias is not None:
-		#       nn.init.xavier_normal(model.bias.data)
+		#       nn.init.xavier_normal_(model.bias.data)
 
 
 class CartPoleNetwork(nn.Module):
@@ -30,15 +30,19 @@ class CartPoleNetwork(nn.Module):
 		self.ffnn2 = nn.Linear(128, 128)
 		self.ffnn3 = nn.Linear(128, 128)
 		self.ffnn4 = nn.Linear(128, 2)
+		self.value = nn.Linear(128, 1)
 
-
-	def forward(self, x):
+	def forward(self, x, duel=False):
 		x = F.relu(self.ffnn1(x))
 		x = F.relu(self.ffnn2(x))
 		x = F.relu(self.ffnn3(x))
-		x = self.ffnn4(x)
+		q_value = self.ffnn4(x)
+		value = self.value(x)
 
-		return x
+		if duel:
+			q_value = value.expand_as(q_value) + (q_value - q_value.mean(1, keepdim=True).expand_as(q_value))
+
+		return q_value
 
 
 class MountainCarNetwork(nn.Module):
@@ -65,7 +69,7 @@ class QNetwork():
 	# The network should take in state of the world as an input,
 	# and output Q values of the actions available to the agent as the output.
 
-	def __init__(self, environment_name):
+	def __init__(self, environment_name, duel=False):
 		'''
 		  Define your network architecture here. It is also a good idea to define any training operations
 		  and optimizers here, initialize your variables, or alternately compile your model here.
@@ -96,8 +100,8 @@ class QNetwork():
 		self.optimizer = torch.optim.Adam(self.policyModel.parameters(), lr=self.lr, weight_decay=1e-2)
 		# self.optimizer = torch.optim.RMSprop(self.policyModel.parameters(), lr=self.lr, weight_decay=1e-2, momentum=0.9)
 
-	def forward(self, input_vector, mode='policyModel'):
-		return self.policyModel(input_vector) if mode == 'policyModel' else self.targetModel(input_vector)
+	def forward(self, input_vector, mode='policyModel', duel=False):
+		return self.policyModel(input_vector, duel) if mode == 'policyModel' else self.targetModel(input_vector, duel)
 
 	def equate_target_model_weights(self):
 		self.targetModel.load_state_dict(self.policyModel.state_dict())
