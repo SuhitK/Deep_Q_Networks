@@ -13,13 +13,14 @@ def computef(X):
     return 3/2 * X**2 * (1 + X)
 
 def computer(X, mean = None):
-    p_x = 0.5 * (1 + X)
+    mask= np.logical_and((X > -1), (X < 1))
+    p_x = 0.5 * (1 + X) * mask
     if mean == 0:
         q_x = norm(0,1).pdf(X)
     elif mean == 3:
         q_x = norm(3,1).pdf(X)
     else:
-        q_x = 15/16 * X ** 2 * (1 + X) ** 2
+        q_x = 15/16 * X ** 2 * (1 + X) ** 2 * mask
 
     return p_x / q_x
 
@@ -47,7 +48,7 @@ def main():
         X = np.random.normal(loc = 3., size = (i,))
         F = computef(X)
         R = computer(X, 3)
-        RW = R / np.sum(R)
+        RW = R /( np.sum(R) + 1e-3)
         FW3.append(F * RW)
         print ("Samples = " + str(i))
         print ("Mean = " + str(np.mean(F * R)))
@@ -61,7 +62,7 @@ def main():
         X = np.random.normal(size = (i,))
         F = computef(X)
         R = computer(X)
-        RW = R / np.sum(R)
+        RW = R / (np.sum(R) + 1e-3)
         FW0.append(F * RW)
         print ("Samples = " + str(i))
         print ("Mean = " + str(np.mean(F * R)))
@@ -76,7 +77,7 @@ def main():
         X = qobject.rvs(size = (i,))
         F = computef(X)
         R = computer(X)
-        RW = R / np.sum(R)
+        RW = R / (np.sum(R) + 1e-3)
         FWQ.append(F *  RW )
         print ("Samples = " + str(i))
         print ("Mean = " + str(np.mean(F * R)))
