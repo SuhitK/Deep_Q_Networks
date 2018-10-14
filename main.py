@@ -1,5 +1,6 @@
 import os
 import pdb
+import sys
 import torch
 import shutil
 import random
@@ -34,6 +35,7 @@ def parse_arguments():
 	parser.add_argument('--no_reset_dir', dest='reset_dir', action='store_false')
 	parser.add_argument('--double_dqn', dest='double_dqn', action='store_true')
 	parser.add_argument('--duel_dqn', dest='duel_dqn', action='store_true')
+	parser.add_argument('--logger', dest='logfile', type=str, default='stdout')
 	return parser.parse_args()
 
 
@@ -50,8 +52,24 @@ def print_user_flags(user_flags, line_limit=80):
 	print('{}\n\n'.format("-" * 80))
 
 
+class Logger(object):
+	def __init__(self, output_file):
+		self.terminal = sys.stdout
+		self.log = open(output_file, "a")
+
+	def write(self, message):
+		self.terminal.write(message)
+		self.terminal.flush()
+		self.log.write(message)
+		self.log.flush()
+
+	def flush(self):
+		pass
+
+
 def main():
 	args = parse_arguments()
+	sys.stdout = Logger(args.logfile)
 	print_user_flags(args)
 
 	if not os.path.exists('PolicyModel/'):

@@ -172,16 +172,15 @@ class DQN_Agent():
 
 		# TODO: Model update code comes here and also predicting q for current state
 		time = datetime.now().time()
+		avgRewardFilename = "RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.env, time)
+		avgRewardFile = open(avgRewardFilename, 'w')
+		avg_reward = 0
 		steps = 0
 
 		if self.args.lookahead and self.args.env == 'CartPole-v0':
 			lookaheadFilename = "RewardsCSV/Average_Rewards_2Step_Lookahead_{}_{}.csv".format(self.args.env, time)
 			lookaheadFile = open(lookaheadFilename, 'w')
 			lookahead_reward = 0
-		else:
-			avgRewardFilename = "RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.env, time)
-			avgRewardFile = open(avgRewardFilename, 'w')
-			avg_reward = 0
 
 		for episode in range(self.args.epi):
 			state = self.get_init_state()
@@ -216,13 +215,15 @@ class DQN_Agent():
 				self.dqnNetwork.equate_target_model_weights()
 
 			if episode % self.args.test_every == self.args.test_every - 1:
+				avg_reward = self.test(lookahead=self.greedy_policy)
+				avgRewardFile.write('{}\n'.format(avg_reward))
+
 				if self.args.lookahead and self.args.env == 'CartPole-v0':
+					print(OKBLUE + 'Two Step Look Ahead Test' + ENDC)
 					lookahead_reward = self.test(lookahead=self.get_cartpole_lookahead_action)
 					lookaheadFile.write('{}\n'.format(lookahead_reward))
 					print(OKGREEN + 'Train Episode: {}\tAvg. Test Reward: {}\t Avg. 2 Step Lookahead Reward: {}'.format(episode+1, avg_reward, lookahead_reward) + ENDC)
 				else:
-					avg_reward = self.test(lookahead=self.greedy_policy)
-					avgRewardFile.write('{}\n'.format(avg_reward))
 					print(OKGREEN + 'Train Episode: {}\tAvg. Test Reward: {}'.format(episode+1, avg_reward) + ENDC)
 
 			if (episode % self.args.save_epi == self.args.save_epi - 1) or (avg_reward > 190.0 and episode % 100 == 99):
