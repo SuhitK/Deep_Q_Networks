@@ -97,8 +97,12 @@ class DQN_Agent():
                 time = datetime.now().time()
                 avgRewardFilename = "RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.env, time)
                 avgRewardFile = open(avgRewardFilename, 'w')
-                avg_reward = 0
+                avg_reward = 0.
                 steps = 0
+
+                trainRewardFilename = "RewardsCSV/Training_Rewards_{}_{}.csv".format(self.args.env, time)
+                trainRewardFile = open(trainRewardFilename,'w')
+                train_reward = 0.
 
                 for episode in range(self.args.epi):
                         state = self.get_init_state()
@@ -112,6 +116,7 @@ class DQN_Agent():
                                 self.decay_epsilon()
 
                                 next_state, reward, self.env_is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
+                                train_reward += reward
 
                                 next_state = self.map_cuda(self.get_state_tensor(next_state))
                                 terminal = self.map_cuda(torch.LongTensor([self.env_is_terminal]))
@@ -136,6 +141,10 @@ class DQN_Agent():
                             self.dqnNetwork.equate_target_model_weights()
 
                         if episode % self.args.test_epi == self.args.test_epi - 1:
+                                avg_train_reward = train_reward/self.args.test_epi
+                                trainRewardFile.write('{}\n'.format(avg_train_reward))
+                                train_reward = 0.
+
                                 # self.args.render = False
                                 avg_reward = self.test()
                                 avgRewardFile.write('{}\n'.format(avg_reward))

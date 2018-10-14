@@ -60,8 +60,10 @@ def main():
                 os.makedirs('RewardsCSV/')
 
         agent = DQN_Agent(args, memory_size=100000, burn_in=args.burn_in)
-        agent.burn_in_memory()
-        agent.train()
+        if args.train:
+            agent.burn_in_memory()
+            agent.train()
+
         agent.agent_close()
 
 
