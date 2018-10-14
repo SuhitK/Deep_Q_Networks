@@ -1,9 +1,14 @@
 import os
 import pdb
+import torch
 import shutil
+import random
 import argparse
 
 from DQN.DQN_agent import DQN_Agent
+
+torch.manual_seed(0)
+random.seed(0)
 
 
 def parse_arguments():
@@ -12,9 +17,9 @@ def parse_arguments():
 	parser.add_argument('--render', dest='render', action='store_true')
 	parser.add_argument('--train', dest='train', type=int, default=1)
 	parser.add_argument('--weight_file', dest='weight_file', type=str, default=None)
-	parser.add_argument('--gamma', dest='gamma', type=float, default=0.9)
 	parser.add_argument('--memory_size', dest='memory_size', type=int, default=100000)
 	parser.add_argument('--burn_in', dest='burn_in', type=int, default=10000)
+	parser.add_argument('--gamma', dest='gamma', type=float, default=0.9)
 	parser.add_argument('--batch_size', dest='bsz', type=int, default=32)
 	parser.add_argument('--episodes', dest='epi', type=int, default=10000)
 	parser.add_argument('--test_every', dest='test_every', type=int, default=100)
@@ -23,6 +28,7 @@ def parse_arguments():
 	parser.add_argument('--eps_init', dest='epsilon_init', type=float, default=0.5)
 	parser.add_argument('--eps_stop', dest='epsilon_stop', type=float, default=0.05)
 	parser.add_argument('--eps_iter', dest='epsilon_iter', type=int, default=100000)
+	parser.add_argument('--target_update', dest='target_update', type=int, default=100)
 	parser.add_argument('--eps_greedy', dest='greedy_epsilon', type=float, default=0.05)
 	parser.add_argument('--no_reset_dir', dest='reset_dir', action='store_false')
 	parser.add_argument('--double_dqn', dest='double_dqn', action='store_true')
