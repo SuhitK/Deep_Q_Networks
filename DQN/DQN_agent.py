@@ -27,7 +27,7 @@ class DQN_Agent():
 		self.epsilon = args.epsilon_init
 		self.greedy_epsilon = self.args.greedy_epsilon
 		self.env = gym.make(self.args.env)
-		self.env = gym.wrappers.Monitor(self.env, self.args.env, force=True)
+		self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env, force=True)
 		self.dqnNetwork = QNetwork(self.args.env, self.args.duel_dqn)
 		self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
 		self.dqnNetwork.load_model_weights(self.args.weight_file)
@@ -52,7 +52,8 @@ class DQN_Agent():
 			self.dqnNetwork.load_model(model_file)
 
 	def decay_epsilon(self):
-		self.epsilon *= self.decay
+		if self.args.decay:
+			self.epsilon *= self.decay
 		self.epsilon = max(self.epsilon, self.args.epsilon_stop)
 
 	def epsilon_greedy_policy(self, state):
@@ -172,13 +173,13 @@ class DQN_Agent():
 
 		# TODO: Model update code comes here and also predicting q for current state
 		time = datetime.now().time()
-		avgRewardFilename = "RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.env, time)
+		avgRewardFilename = "{}RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.folder_prefix, self.args.env, time)
 		avgRewardFile = open(avgRewardFilename, 'w')
 		avg_reward = 0
 		steps = 0
 
 		if self.args.lookahead and self.args.env == 'CartPole-v0':
-			lookaheadFilename = "RewardsCSV/Average_Rewards_2Step_Lookahead_{}_{}.csv".format(self.args.env, time)
+			lookaheadFilename = "{}RewardsCSV/Average_Rewards_2Step_Lookahead_{}_{}.csv".format(self.args.folder_prefix, self.args.env, time)
 			lookaheadFile = open(lookaheadFilename, 'w')
 			lookahead_reward = 0
 
@@ -227,7 +228,15 @@ class DQN_Agent():
 					print(OKGREEN + 'Train Episode: {}\tAvg. Test Reward: {}'.format(episode+1, avg_reward) + ENDC)
 
 			if (episode % self.args.save_epi == self.args.save_epi - 1) or (avg_reward > 190.0 and episode % 100 == 99):
-				self.dqnNetwork.save_model_weights(suffix='{}_epi{}_rew{:.4f}_{}.pkl'.format(self.args.env, episode+1, avg_reward, time))
+				self.dqnNetwork.save_model_weights(prefix=self.args.folder_prefix, suffix='{}_epi{}_rew{:.4f}_{}.pkl'.format(self.args.env, episode+1, avg_reward, time))
+
+		avg_reward = self.test(test_epi=100, lookahead=self.greedy_policy)
+
+		if self.args.lookahead and self.args.env == 'CartPole-v0':
+			lookahead_reward = self.test(test_epi=100, lookahead=self.get_cartpole_lookahead_action)
+			print(OKGREEN + 'Trained Model - Avg. Test Reward: {}\t Avg. 2 Step Lookahead Reward: {}'.format(avg_reward, lookahead_reward) + ENDC)
+		else:
+			print(OKGREEN + 'Trained Model - Avg. Test Reward: {}'.format(avg_reward) + ENDC)
 
 		avgRewardFile.close()
 
@@ -259,11 +268,14 @@ class DQN_Agent():
 			loss.backward()
 			self.dqnNetwork.optimizer.step()
 
-	def test(self, model_file=None, lookahead=None):
+	def test(self, test_epi=None, model_file=None, lookahead=None):
 		# Evaluate the performance of your agent over 100 episodes, by calculating cummulative rewards for the 100 episodes.
 		# Here you need to interact with the environment, irrespective of whether you are using a memory.
+		if test_epi is None:
+			test_epi = self.args.test_epi
+
 		reward_sum = 0
-		for i in range(self.args.test_epi):
+		for i in range(test_epi):
 			state = self.get_init_state()
 			episode_steps = 0
 
@@ -283,8 +295,8 @@ class DQN_Agent():
 					break
 			print('Steps: {}'.format(episode_steps))
 
-		return np.mean(self.env.get_episode_rewards()[-self.args.test_epi:])
-		# return reward_sum / self.args.test_epi
+		return np.mean(self.env.get_episode_rewards()[-test_epi:])
+		# return reward_sum / test_epi
 
 	def burn_in_memory(self):
 		# Initialize your replay memory with a burn_in number of episodes / transitions.

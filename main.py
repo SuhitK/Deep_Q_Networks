@@ -35,7 +35,9 @@ def parse_arguments():
 	parser.add_argument('--no_reset_dir', dest='reset_dir', action='store_false')
 	parser.add_argument('--double_dqn', dest='double_dqn', action='store_true')
 	parser.add_argument('--duel_dqn', dest='duel_dqn', action='store_true')
+	parser.add_argument('--decay', dest='decay', action='store_true')
 	parser.add_argument('--logger', dest='logfile', type=str, default='stdout')
+	parser.add_argument('--folder_prefix', dest='folder_prefix', type=str, default='Models/')
 	return parser.parse_args()
 
 
@@ -69,24 +71,32 @@ class Logger(object):
 
 def main():
 	args = parse_arguments()
-	sys.stdout = Logger(args.logfile)
+
+	if not os.path.exists(args.folder_prefix):
+		os.makedirs(args.folder_prefix)
+
+	sys.stdout = Logger(args.folder_prefix + args.logfile)
 	print_user_flags(args)
 
-	if not os.path.exists('PolicyModel/'):
-		os.makedirs('PolicyModel/')
+	PolicyModel = args.folder_prefix + 'PolicyModel/'
+	TargetModel = args.folder_prefix + 'TargetModel/'
+	RewardsCSV = args.folder_prefix + 'RewardsCSV/'
+
+	if not os.path.exists(PolicyModel):
+		os.makedirs(PolicyModel)
 	elif args.reset_dir:
-		shutil.rmtree('PolicyModel/', ignore_errors=True)
-		os.makedirs('PolicyModel/')
-	if not os.path.exists('TargetModel/'):
-		os.makedirs('TargetModel/')
+		shutil.rmtree(PolicyModel, ignore_errors=True)
+		os.makedirs(PolicyModel)
+	if not os.path.exists(TargetModel):
+		os.makedirs(TargetModel)
 	elif args.reset_dir:
-		shutil.rmtree('TargetModel/', ignore_errors=True)
-		os.makedirs('TargetModel/')
-	if not os.path.exists('RewardsCSV/'):
-		os.makedirs('RewardsCSV/')
+		shutil.rmtree(TargetModel, ignore_errors=True)
+		os.makedirs(TargetModel)
+	if not os.path.exists(RewardsCSV):
+		os.makedirs(RewardsCSV)
 	elif args.reset_dir:
-		shutil.rmtree('RewardsCSV/', ignore_errors=True)
-		os.makedirs('RewardsCSV/')
+		shutil.rmtree(RewardsCSV, ignore_errors=True)
+		os.makedirs(RewardsCSV)
 
 	agent = DQN_Agent(args, memory_size=args.memory_size, burn_in=args.burn_in)
 	agent.burn_in_memory()

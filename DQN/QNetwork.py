@@ -118,10 +118,10 @@ class QNetwork():
 	def equate_target_model_weights(self):
 		self.targetModel.load_state_dict(self.policyModel.state_dict())
 
-	def save_model_weights(self, suffix):
+	def save_model_weights(self, prefix, suffix):
 		# Helper function to save your model / weights.
-		torch.save(self.policyModel.state_dict(), 'PolicyModel/{}'.format(suffix))
-		torch.save(self.policyModel.state_dict(), 'TargetModel/{}'.format(suffix))
+		torch.save(self.policyModel.state_dict(), '{}PolicyModel/{}'.format(prefix, suffix))
+		torch.save(self.policyModel.state_dict(), '{}TargetModel/{}'.format(prefix, suffix))
 
 	def load_model(self, model_file):
 		# Helper function to load an existing model.
