@@ -40,7 +40,7 @@ class DQN_Agent():
 		self.use_cuda = torch.cuda.is_available()
 		self.env_is_terminal = True
 		self.state = None
-		self.env.seed(0)
+		# self.env.seed(0)
 
 		self.dqnNetwork.print_model()
 		self.dqnNetwork.print_model_summary((self.args.bsz, self.num_observations))
@@ -76,7 +76,6 @@ class DQN_Agent():
 
 	def get_cartpole_lookahead_step(self, action, state):
 		# CartPole Step definition (copied as is from https://github.com/openai/gym/blob/master/gym/envs/classic_control/cartpole.py)
-		assert self.env.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
 		x, x_dot, theta, theta_dot = state
 		force = self.env.env.env.force_mag if action==1 else -self.env.env.env.force_mag
 		costheta = math.cos(theta)
@@ -110,7 +109,6 @@ class DQN_Agent():
 		else:
 			if self.env.env.env.steps_beyond_done == 0:
 				print(WARNING + "You are calling 'step()' even though this environment has already returned done = True. You should always call 'reset()' once you receive 'done = True' -- any further steps are undefined behavior." + ENDC)
-			self.env.env.env.steps_beyond_done += 1
 			reward = 0.0
 
 		return np.array(state), reward, done, {}
@@ -174,15 +172,16 @@ class DQN_Agent():
 
 		# TODO: Model update code comes here and also predicting q for current state
 		time = datetime.now().time()
-		avgRewardFilename = "RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.env, time)
-		avgRewardFile = open(avgRewardFilename, 'w')
-		avg_reward = 0
 		steps = 0
 
-		if self.args.env == 'CartPole-v0':
+		if self.args.lookahead and self.args.env == 'CartPole-v0':
 			lookaheadFilename = "RewardsCSV/Average_Rewards_2Step_Lookahead_{}_{}.csv".format(self.args.env, time)
 			lookaheadFile = open(lookaheadFilename, 'w')
 			lookahead_reward = 0
+		else:
+			avgRewardFilename = "RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.env, time)
+			avgRewardFile = open(avgRewardFilename, 'w')
+			avg_reward = 0
 
 		for episode in range(self.args.epi):
 			state = self.get_init_state()
@@ -217,15 +216,13 @@ class DQN_Agent():
 				self.dqnNetwork.equate_target_model_weights()
 
 			if episode % self.args.test_every == self.args.test_every - 1:
-				avg_reward = self.test(lookahead=self.greedy_policy)
-				avgRewardFile.write('{}\n'.format(avg_reward))
-
-				if self.args.env == 'CartPole-v0':
-					print(OKBLUE + 'Two Step Look Ahead Test' + ENDC)
+				if self.args.lookahead and self.args.env == 'CartPole-v0':
 					lookahead_reward = self.test(lookahead=self.get_cartpole_lookahead_action)
 					lookaheadFile.write('{}\n'.format(lookahead_reward))
 					print(OKGREEN + 'Train Episode: {}\tAvg. Test Reward: {}\t Avg. 2 Step Lookahead Reward: {}'.format(episode+1, avg_reward, lookahead_reward) + ENDC)
 				else:
+					avg_reward = self.test(lookahead=self.greedy_policy)
+					avgRewardFile.write('{}\n'.format(avg_reward))
 					print(OKGREEN + 'Train Episode: {}\tAvg. Test Reward: {}'.format(episode+1, avg_reward) + ENDC)
 
 			if (episode % self.args.save_epi == self.args.save_epi - 1) or (avg_reward > 190.0 and episode % 100 == 99):

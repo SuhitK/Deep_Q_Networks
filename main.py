@@ -7,8 +7,8 @@ import argparse
 
 from DQN.DQN_agent import DQN_Agent
 
-torch.manual_seed(0)
-random.seed(0)
+# torch.manual_seed(0)
+# random.seed(0)
 
 
 def parse_arguments():
@@ -30,6 +30,7 @@ def parse_arguments():
 	parser.add_argument('--eps_iter', dest='epsilon_iter', type=int, default=100000)
 	parser.add_argument('--target_update', dest='target_update', type=int, default=100)
 	parser.add_argument('--eps_greedy', dest='greedy_epsilon', type=float, default=0.05)
+	parser.add_argument('--lookahead', dest='lookahead', action='store_true')
 	parser.add_argument('--no_reset_dir', dest='reset_dir', action='store_false')
 	parser.add_argument('--double_dqn', dest='double_dqn', action='store_true')
 	parser.add_argument('--duel_dqn', dest='duel_dqn', action='store_true')
