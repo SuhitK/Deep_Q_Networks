@@ -11,7 +11,7 @@ def parse_arguments():
 	parser.add_argument('--env', dest='env', type=str, default='CartPole-v0')
 	parser.add_argument('--render', dest='render', action='store_true')
 	parser.add_argument('--train', dest='train', type=int, default=1)
-	parser.add_argument('--model', dest='model_file', type=str)
+	parser.add_argument('--weight_file', dest='weight_file', type=str, default=None)
 	parser.add_argument('--gamma', dest='gamma', type=float, default=0.9)
 	parser.add_argument('--memory_size', dest='memory_size', type=int, default=100000)
 	parser.add_argument('--burn_in', dest='burn_in', type=int, default=10000)

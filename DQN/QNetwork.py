@@ -131,8 +131,9 @@ class QNetwork():
 
 	def load_model_weights(self, weight_file):
 		# Helper funciton to load model weights.
-		self.policyModel.load_state_dict(torch.load(weight_file))
-		self.equate_target_model_weights()
+		if weight_file is not None:
+			self.policyModel.load_state_dict(torch.load(weight_file))
+			self.equate_target_model_weights()
 
 	def print_model(self):
 		print(self.policyModel)

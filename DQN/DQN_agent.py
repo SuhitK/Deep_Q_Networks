@@ -24,6 +24,7 @@ class DQN_Agent():
 		self.env = gym.wrappers.Monitor(self.env, self.args.env, force=True)
 		self.dqnNetwork = QNetwork(self.args.env, self.args.duel_dqn)
 		self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
+		self.dqnNetwork.load_model_weights(self.args.weight_file)
 
 		self.num_observations = self.env.observation_space.shape[0]
 		self.num_actions = self.env.action_space.n
