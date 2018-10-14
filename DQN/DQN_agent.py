@@ -27,7 +27,7 @@ class DQN_Agent():
 		self.epsilon = args.epsilon_init
 		self.greedy_epsilon = self.args.greedy_epsilon
 		self.env = gym.make(self.args.env)
-		self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env, force=True)
+		self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env, force=True, video_callable=False)
 		self.dqnNetwork = QNetwork(self.args.env, self.args.duel_dqn)
 		self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
 		self.dqnNetwork.load_model_weights(self.args.weight_file)
@@ -176,6 +176,10 @@ class DQN_Agent():
 		avgRewardFilename = "{}RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.folder_prefix, self.args.env, time)
 		avgRewardFile = open(avgRewardFilename, 'w')
 		avg_reward = 0
+
+		avgTrainRewardFilename = "{}RewardsCSV/Average_Train_Rewards_{}_{}.csv".format(self.args.folder_prefix, self.args.env, time)
+		avgTrainRewardFile = open(avgTrainRewardFilename, 'w')
+		avg_train_rewards = []
 		steps = 0
 
 		if self.args.lookahead and self.args.env == 'CartPole-v0':
@@ -185,6 +189,7 @@ class DQN_Agent():
 
 		for episode in range(self.args.epi):
 			state = self.get_init_state()
+			episode_rewards = 0
 			episode_steps = 0
 
 			while True:
@@ -195,6 +200,7 @@ class DQN_Agent():
 				self.decay_epsilon()
 
 				next_state, reward, self.env_is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
+				episode_rewards += reward
 
 				next_state = self.map_cuda(self.get_state_tensor(next_state))
 				terminal = self.map_cuda(torch.LongTensor([self.env_is_terminal]))
@@ -212,10 +218,17 @@ class DQN_Agent():
 				if self.env_is_terminal or (self.args.env == 'CartPole-v0' and episode_steps == 200):
 					break
 
+			avg_train_rewards.append(episode_rewards)
+			episode_rewards = 0
+
 			if episode % self.args.target_update == self.args.target_update -1:
 				self.dqnNetwork.equate_target_model_weights()
 
 			if episode % self.args.test_every == self.args.test_every - 1:
+				train_reward = np.mean(self.env.get_episode_rewards()[-self.args.test_every:])
+				avgTrainRewardFile.write('{},{}\n'.format(np.mean(avg_train_rewards), train_reward))
+				avg_train_rewards = []
+				# avgTrainRewardFile.write('{}\n'.format(np.mean(self.env.get_episode_rewards()[-self.args.test_every:])))
 				avg_reward = self.test(lookahead=self.greedy_policy)
 				avgRewardFile.write('{}\n'.format(avg_reward))
 
@@ -223,9 +236,9 @@ class DQN_Agent():
 					print(OKBLUE + 'Two Step Look Ahead Test' + ENDC)
 					lookahead_reward = self.test(lookahead=self.get_cartpole_lookahead_action)
 					lookaheadFile.write('{}\n'.format(lookahead_reward))
-					print(OKGREEN + 'Train Episode: {}\tAvg. Test Reward: {}\t Avg. 2 Step Lookahead Reward: {}'.format(episode+1, avg_reward, lookahead_reward) + ENDC)
+					print(OKGREEN + 'Train Episode: {}\tAvg. Train Reward: {}\tAvg. Test Reward: {}\tAvg. 2 Step Lookahead Reward: {}'.format(episode+1, train_reward, avg_reward, lookahead_reward) + ENDC)
 				else:
-					print(OKGREEN + 'Train Episode: {}\tAvg. Test Reward: {}'.format(episode+1, avg_reward) + ENDC)
+					print(OKGREEN + 'Train Episode: {}\tAvg. Train Reward: {}\tAvg. Test Reward: {}'.format(episode+1, train_reward, avg_reward) + ENDC)
 
 			if (episode % self.args.save_epi == self.args.save_epi - 1) or (avg_reward > 190.0 and episode % 100 == 99):
 				self.dqnNetwork.save_model_weights(prefix=self.args.folder_prefix, suffix='{}_epi{}_rew{:.4f}_{}.pkl'.format(self.args.env, episode+1, avg_reward, time))
@@ -233,6 +246,7 @@ class DQN_Agent():
 		avg_reward = self.test(test_epi=100, lookahead=self.greedy_policy)
 
 		if self.args.lookahead and self.args.env == 'CartPole-v0':
+			print(OKBLUE + 'Two Step Look Ahead Test' + ENDC)
 			lookahead_reward = self.test(test_epi=100, lookahead=self.get_cartpole_lookahead_action)
 			print(OKGREEN + 'Trained Model - Avg. Test Reward: {}\t Avg. 2 Step Lookahead Reward: {}'.format(avg_reward, lookahead_reward) + ENDC)
 		else:

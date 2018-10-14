@@ -52,14 +52,14 @@ class MountainCarNetwork(nn.Module):
 	def __init__(self, duel):
 		super(MountainCarNetwork, self).__init__()
 		self.duel = duel
-		self.ffnn1 = nn.Linear(2, 64)
-		self.ffnn2 = nn.Linear(64, 128)
-		self.ffnn3 = nn.Linear(128, 512)
-		self.ffnn4 = nn.Linear(512, 128)
-		self.ffnn5 = nn.Linear(128, 3)
+		self.ffnn1 = nn.Linear(2, 128)
+		self.ffnn2 = nn.Linear(128, 256)
+		self.ffnn3 = nn.Linear(256, 512)
+		self.ffnn4 = nn.Linear(512, 256)
+		self.ffnn5 = nn.Linear(256, 3)
 
 		if self.duel:
-			self.value = nn.Linear(128, 1)
+			self.value = nn.Linear(256, 1)
 
 	def forward(self, x):
 		x = F.relu(self.ffnn1(x))
