@@ -14,13 +14,13 @@ def computef(X):
 
 def computer(X, mean = None):
     mask= np.logical_and((X > -1), (X < 1))
-    p_x = 0.5 * (1 + X) * mask
+    p_x = 0.5 * (1 + X) * mask + 1e-5
     if mean == 0:
         q_x = norm(0,1).pdf(X)
     elif mean == 3:
         q_x = norm(3,1).pdf(X)
     else:
-        q_x = 15/16 * X ** 2 * (1 + X) ** 2 * mask
+        q_x = 15/16 * X ** 2 * (1 + X) ** 2 * mask + 1e-5
 
     return p_x / q_x
 
