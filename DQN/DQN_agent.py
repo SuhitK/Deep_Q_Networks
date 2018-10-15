@@ -27,7 +27,14 @@ class DQN_Agent():
 		self.epsilon = args.epsilon_init
 		self.greedy_epsilon = self.args.greedy_epsilon
 		self.env = gym.make(self.args.env)
-		self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env, force=True, video_callable=False)
+		if self.args.train == 1:
+			self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env, force=True, video_callable=False)
+		else:
+			print(self.args.folder_prefix + self.args.env + 'test')
+			# self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env + 'test', force=True)
+			# self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env + 'test_3400', force=True)
+			# self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env + 'test_6800', force=True)
+			self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env + 'test_10000', force=True)
 		self.dqnNetwork = QNetwork(self.args.env, self.args.duel_dqn)
 		self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
 		self.dqnNetwork.load_model_weights(self.args.weight_file)
@@ -285,6 +292,10 @@ class DQN_Agent():
 	def test(self, test_epi=None, model_file=None, lookahead=None):
 		# Evaluate the performance of your agent over 100 episodes, by calculating cummulative rewards for the 100 episodes.
 		# Here you need to interact with the environment, irrespective of whether you are using a memory.
+
+		if model_file is not None:
+			self.dqnNetwork.load_model_weights(model_file)
+
 		if test_epi is None:
 			test_epi = self.args.test_epi
 

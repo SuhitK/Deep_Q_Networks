@@ -71,38 +71,41 @@ class Logger(object):
 
 def main():
 	args = parse_arguments()
-
-	if not os.path.exists(args.folder_prefix):
-		os.makedirs(args.folder_prefix)
-
-	sys.stdout = Logger(args.folder_prefix + args.logfile)
-	print_user_flags(args)
-
-	PolicyModel = args.folder_prefix + 'PolicyModel/'
-	TargetModel = args.folder_prefix + 'TargetModel/'
-	RewardsCSV = args.folder_prefix + 'RewardsCSV/'
-
-	if not os.path.exists(PolicyModel):
-		os.makedirs(PolicyModel)
-	elif args.reset_dir:
-		shutil.rmtree(PolicyModel, ignore_errors=True)
-		os.makedirs(PolicyModel)
-	if not os.path.exists(TargetModel):
-		os.makedirs(TargetModel)
-	elif args.reset_dir:
-		shutil.rmtree(TargetModel, ignore_errors=True)
-		os.makedirs(TargetModel)
-	if not os.path.exists(RewardsCSV):
-		os.makedirs(RewardsCSV)
-	elif args.reset_dir:
-		shutil.rmtree(RewardsCSV, ignore_errors=True)
-		os.makedirs(RewardsCSV)
-
 	agent = DQN_Agent(args, memory_size=args.memory_size, burn_in=args.burn_in)
-	agent.burn_in_memory()
-	agent.train()
-	agent.agent_close()
 
+	if args.train == 1:
+		if not os.path.exists(args.folder_prefix):
+			os.makedirs(args.folder_prefix)
+
+		sys.stdout = Logger(args.folder_prefix + args.logfile)
+		print_user_flags(args)
+
+		PolicyModel = args.folder_prefix + 'PolicyModel/'
+		TargetModel = args.folder_prefix + 'TargetModel/'
+		RewardsCSV = args.folder_prefix + 'RewardsCSV/'
+
+		if not os.path.exists(PolicyModel):
+			os.makedirs(PolicyModel)
+		elif args.reset_dir:
+			shutil.rmtree(PolicyModel, ignore_errors=True)
+			os.makedirs(PolicyModel)
+		if not os.path.exists(TargetModel):
+			os.makedirs(TargetModel)
+		elif args.reset_dir:
+			shutil.rmtree(TargetModel, ignore_errors=True)
+			os.makedirs(TargetModel)
+		if not os.path.exists(RewardsCSV):
+			os.makedirs(RewardsCSV)
+		elif args.reset_dir:
+			shutil.rmtree(RewardsCSV, ignore_errors=True)
+			os.makedirs(RewardsCSV)
+
+		agent.burn_in_memory()
+		agent.train()
+	else:
+		agent.test(test_epi=5, model_file=args.weight_file, lookahead=agent.greedy_policy)
+
+	agent.agent_close()
 
 if __name__ == "__main__":
 	main()
