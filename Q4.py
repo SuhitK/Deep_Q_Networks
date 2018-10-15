@@ -1,32 +1,42 @@
 from scipy.stats import rv_continuous,norm
 import numpy as np
 
+np.random.seed(0)
+
+
 class pdistribution(rv_continuous):
-    def _pdf(self,x):
-        return 0.5 * (1 + x)
+    def _pdf(self, x):
+        return (0.5 * (1 + x))
+
 
 class qdistribution(rv_continuous):
-    def _pdf(self,x):
-        return  15/16 * x**2 * (1 + x)**2
+    def _pdf(self, X):
+        return  ((15/16) * (X ** 2) * ((1 + X) ** 2))
+
 
 def computef(X):
-    return 3/2 * X**2 * (1 + X)
+    return ((3/2) * (X**2) * (1 + X))
+
 
 def computer(X, mean = None):
-    p_x = 0.5 * (1 + X)
+    mask = np.logical_and((X > -1), (X < 1))
+    p_x = (0.5 * (1 + X)) * mask
+    # print()
+    p_x_ = (0.5 * (1 + X))
+    print('EQUALITY-P: {}'.format(sum(p_x==p_x_)))
     if mean == 0:
-        q_x = norm(0,1).pdf(X)
+        q_x = norm.pdf(X, loc=0, scale=1)
     elif mean == 3:
-        q_x = norm(3,1).pdf(X)
+        q_x = norm.pdf(X, loc=3, scale=1)
     else:
-        q_x = 15/16 * X ** 2 * (1 + X) ** 2
+        q_x = ((15/16) * (X ** 2) * ((1 + X) ** 2))# * mask + 1e-5
+        q_x_ = ((15/16) * (X ** 2) * ((1 + X) ** 2)) * mask
+        print('EQUALITY-Q: {}'.format(sum(q_x==q_x_)))
 
     return p_x / q_x
 
-        
-    
+
 def main():
-    np.random.seed(0)
     ## Q 4.2
     print ("Q 4.2\n")
     pobject = pdistribution(a = -1., b = 1., seed = 0)
@@ -46,8 +56,12 @@ def main():
     for i in [10, 1000, 10000]:
         X = np.random.normal(loc = 3., size = (i,))
         F = computef(X)
-        R = computer(X, 3)
-        RW = R / np.sum(R)
+        R = computer(X, mean=3)
+        if np.sum(R) == 0:
+            RW = R / (np.sum(R)+1e-3)# + 1e-3)
+        else:
+            RW = R / (np.sum(R))# + 1e-3)
+
         FW3.append(F * RW)
         print ("Samples = " + str(i))
         print ("Mean = " + str(np.mean(F * R)))
@@ -60,8 +74,11 @@ def main():
     for i in [10, 1000, 10000]:
         X = np.random.normal(size = (i,))
         F = computef(X)
-        R = computer(X)
-        RW = R / np.sum(R)
+        R = computer(X, mean=0)
+        if np.sum(R) == 0:
+            RW = R / (np.sum(R)+1e-3)# + 1e-3)
+        else:
+            RW = R / (np.sum(R))# + 1e-3)
         FW0.append(F * RW)
         print ("Samples = " + str(i))
         print ("Mean = " + str(np.mean(F * R)))
@@ -76,7 +93,10 @@ def main():
         X = qobject.rvs(size = (i,))
         F = computef(X)
         R = computer(X)
-        RW = R / np.sum(R)
+        if np.sum(R) == 0:
+            RW = R / (np.sum(R)+1e-3)# + 1e-3)
+        else:
+            RW = R / (np.sum(R))# + 1e-3)
         FWQ.append(F *  RW )
         print ("Samples = " + str(i))
         print ("Mean = " + str(np.mean(F * R)))
@@ -106,15 +126,6 @@ def main():
         print ("Mean = " + str(np.mean(FWQ[iterable]) * i[iterable]))
         print ("Variance = " + str(np.var(FWQ[iterable])))
         print ("")
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
