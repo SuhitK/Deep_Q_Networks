@@ -20,21 +20,30 @@ ENDC = '\033[0m'
 
 class DQN_Agent():
 	def __init__(self, args, memory_size=50000, burn_in=10000, render=False):
-		# Create an instance of the network itself, as well as the memory.
-		# Here is also a good place to set environmental parameters,
-		# as well as training parameters - number of episodes / iterations, etc.
+		'''
+			* Create an instance of the network itself, as well as the memory.
+			* Here is also a good place to set environmental parameters,
+			* as well as training parameters - number of episodes / iterations, etc.
+		'''
 		self.args = args
 		self.epsilon = args.epsilon_init
 		self.greedy_epsilon = self.args.greedy_epsilon
 		self.env = gym.make(self.args.env)
-		if self.args.train == 1:
-			self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env, force=True, video_callable=False)
+
+		# Wrapper for recording videos
+		if not self.args.test:
+			# Record 0/3, 1/3, 2/3 and 3/3 of the Training episodes
+			self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env, force=True, mode='training',
+			                                video_callable=lambda episode_id: episode_id%(self.args.epi//3)==0)
+			self.burn_in_memory()
 		else:
-			print(self.args.folder_prefix + self.args.env + 'test')
-			# self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env + 'test', force=True)
-			# self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env + 'test_3400', force=True)
-			# self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env + 'test_6800', force=True)
-			self.env = gym.wrappers.Monitor(self.env, self.args.folder_prefix + self.args.env + 'test_10000', force=True)
+			# Record 0/3, 1/3, 2/3 and 3/3 of the Training episodes
+			test_name = self.args.folder_prefix + self.args.env + '_test_' + self.args.model_episode
+			if self.args.test_epi < 10:
+				self.env = gym.wrappers.Monitor(self.env, test_name, force=True, mode='evaluation', video_callable=lambda episode_id: True)
+			else:
+				self.env = gym.wrappers.Monitor(self.env, test_name, force=True, mode='evaluation')
+
 		self.dqnNetwork = QNetwork(self.args.env, self.args.duel_dqn)
 		self.replay_memory = Replay_Memory(memory_size=memory_size, burn_in=burn_in)
 		self.dqnNetwork.load_model_weights(self.args.weight_file)
@@ -47,7 +56,12 @@ class DQN_Agent():
 		self.use_cuda = torch.cuda.is_available()
 		self.env_is_terminal = True
 		self.state = None
-		# self.env.seed(0)
+
+		if self.args.seed is not None:
+			np.random.seed(self.args.seed)
+			torch.manual_seed(self.args.seed)
+			random.seed(self.args.seed)
+			self.env.seed(self.args.seed)
 
 		self.dqnNetwork.print_model()
 		self.dqnNetwork.print_model_summary((self.args.bsz, self.num_observations))
@@ -122,6 +136,10 @@ class DQN_Agent():
 		return np.array(state), reward, done, {}
 
 	def get_cartpole_lookahead_action(self, action):
+		'''
+			* Perform the lookahead for the given action and state of the environment by looking
+			* at the maximum reward by taking two steps ahead
+		'''
 		state_1 = self.state.cpu().numpy()[0]
 		max_Qval_1, max_action_1 = float('-inf'), float('-inf')
 		for action_1 in range(self.num_actions):
@@ -160,7 +178,6 @@ class DQN_Agent():
 			state, reward, self.env_is_terminal, info = self.env.step(action)
 			state = self.map_cuda(self.get_state_tensor(state))
 			if self.env_is_terminal:
-				# state = self.map_cuda(self.get_state_tensor(self.env.reset()))
 				state = self.get_init_state()
 		return state
 
@@ -171,14 +188,13 @@ class DQN_Agent():
 		return tensor.cuda() if self.use_cuda else tensor
 
 	def train(self):
-		# In this function, we will train our network.
-		# If training without experience replay_memory, then you will interact with the environment
-		# in this function, while also updating your network parameters.
-
-		# If you are using a replay memory, you should interact with environment here, and store these
-		# transitions to memory, while also updating your model.
-
-		# TODO: Model update code comes here and also predicting q for current state
+		'''
+			* In this function, we will train our network.
+			* If training without experience replay_memory, then you will interact with the environment
+			* in this function, while also updating your network parameters.
+			* If you are using a replay memory, you should interact with environment here, and store these
+			* transitions to memory, while also updating your model.
+		'''
 		time = datetime.now().time()
 		avgRewardFilename = "{}RewardsCSV/Average_Rewards_{}_{}.csv".format(self.args.folder_prefix, self.args.env, time)
 		avgRewardFile = open(avgRewardFilename, 'w')
@@ -262,6 +278,11 @@ class DQN_Agent():
 		avgRewardFile.close()
 
 	def train_QNetwork(self):
+		'''
+			* Perform the network training by calculating the predicted and true values for the labels
+			* Calculation of true values will depend on the type of network (DQN or Double DQN)
+			* Execute the back propogation for the loss evaluated from the criterion
+		'''
 		self.dqnNetwork.optimizer.zero_grad()
 
 		input_batch = self.replay_memory.sample_batch(batch_size=self.args.bsz)
@@ -290,16 +311,18 @@ class DQN_Agent():
 			self.dqnNetwork.optimizer.step()
 
 	def test(self, test_epi=None, model_file=None, lookahead=None):
-		# Evaluate the performance of your agent over 100 episodes, by calculating cummulative rewards for the 100 episodes.
-		# Here you need to interact with the environment, irrespective of whether you are using a memory.
-
+		'''
+			* Evaluate the performance of your agent over 100 episodes, by calculating cummulative rewards for the test_epi episodes.
+			* Here you need to interact with the environment, irrespective of whether you are using a memory.
+			* Take the step for the environment from the lookahead function passed (greedy_policy or get_cartpole_lookahead_action)
+			* Load the model from model_file if parameter is passed
+		'''
 		if model_file is not None:
 			self.dqnNetwork.load_model_weights(model_file)
 
 		if test_epi is None:
 			test_epi = self.args.test_epi
 
-		reward_sum = 0
 		for i in range(test_epi):
 			state = self.get_init_state()
 			episode_steps = 0
@@ -313,7 +336,6 @@ class DQN_Agent():
 
 				next_state, reward, self.env_is_terminal, info = self.env.step(action.cpu().numpy()[0, 0])
 				state = self.map_cuda(self.get_state_tensor(next_state))
-				reward_sum += reward
 				episode_steps += 1
 
 				if self.env_is_terminal or (self.args.env == 'CartPole-v0' and episode_steps == 200):
@@ -321,10 +343,11 @@ class DQN_Agent():
 			print('Steps: {}'.format(episode_steps))
 
 		return np.mean(self.env.get_episode_rewards()[-test_epi:])
-		# return reward_sum / test_epi
 
 	def burn_in_memory(self):
-		# Initialize your replay memory with a burn_in number of episodes / transitions.
+		'''
+			* Initialize replay memory with a burn_in number of episodes OR transitions.
+		'''
 		state = self.get_init_state()
 
 		for _ in range(self.replay_memory.burn_in):
@@ -344,4 +367,7 @@ class DQN_Agent():
 				state = self.map_cuda(self.get_state_tensor(self.env.reset()))
 
 	def agent_close(self):
+		'''
+			* Close the wrapper monitor for the agent
+		'''
 		self.env.env.close()

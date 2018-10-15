@@ -1,22 +1,18 @@
 import os
 import pdb
 import sys
-import torch
 import shutil
-import random
 import argparse
 
 from DQN.DQN_agent import DQN_Agent
-
-# torch.manual_seed(0)
-# random.seed(0)
 
 
 def parse_arguments():
 	parser = argparse.ArgumentParser(description='Deep Q Network Argument Parser')
 	parser.add_argument('--env', dest='env', type=str, default='CartPole-v0')
 	parser.add_argument('--render', dest='render', action='store_true')
-	parser.add_argument('--train', dest='train', type=int, default=1)
+	parser.add_argument('--test', dest='test', action='store_true')
+	parser.add_argument('--model_episode', dest='model_epi', type=int, default=0)
 	parser.add_argument('--weight_file', dest='weight_file', type=str, default=None)
 	parser.add_argument('--memory_size', dest='memory_size', type=int, default=100000)
 	parser.add_argument('--burn_in', dest='burn_in', type=int, default=10000)
@@ -36,6 +32,7 @@ def parse_arguments():
 	parser.add_argument('--double_dqn', dest='double_dqn', action='store_true')
 	parser.add_argument('--duel_dqn', dest='duel_dqn', action='store_true')
 	parser.add_argument('--decay', dest='decay', action='store_true')
+	parser.add_argument('--seed', dest='seed', type=int, default=None)
 	parser.add_argument('--logger', dest='logfile', type=str, default='stdout')
 	parser.add_argument('--folder_prefix', dest='folder_prefix', type=str, default='Models/')
 	return parser.parse_args()
@@ -100,10 +97,9 @@ def main():
 			shutil.rmtree(RewardsCSV, ignore_errors=True)
 			os.makedirs(RewardsCSV)
 
-		agent.burn_in_memory()
 		agent.train()
 	else:
-		agent.test(test_epi=5, model_file=args.weight_file, lookahead=agent.greedy_policy)
+		agent.test(test_epi=args.test_epi, model_file=args.weight_file, lookahead=agent.greedy_policy)
 
 	agent.agent_close()
 

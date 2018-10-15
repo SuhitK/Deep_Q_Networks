@@ -19,8 +19,6 @@ useCUDA = torch.cuda.is_available()
 def weight_init(model):
 	if isinstance(model, nn.Linear):
 		nn.init.xavier_normal_(model.weight.data)
-		# if model.bias is not None:
-		#       nn.init.xavier_normal_(model.bias.data)
 
 
 class CartPoleNetwork(nn.Module):
