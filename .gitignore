@@ -4,8 +4,12 @@
 **/*.vim
 **.csv
 **.pkl
-**/Models
-Models/**
+**/ModelFiles
+ModelFiles/**
 __pycache__/**
 **/__pycache__
 module_requirements.py
+Videos/**
+**/Videos
+LoggerOutputs/**
+**/LoggerOutputs
