@@ -1,9 +1,9 @@
-**.pyc
 **/*.mp4
 **/*.json
 **/*.vim
-**.csv
-**.pkl
+**/*.pkl
+**/*.pyc
+**/*.csv
 **/ModelFiles
 ModelFiles/**
 __pycache__/**
