@@ -2,6 +2,7 @@
 Implementing DQN, Double DQN and Duelling Networks on Atari Environments.
 
 # Usage
+```
 usage: main.py [-h] [--env ENV] [--render] [--test]
                [--model_episode MODEL_EPI] [--weight_file WEIGHT_FILE]
                [--memory_size MEMORY_SIZE] [--burn_in BURN_IN] [--gamma GAMMA]
@@ -65,17 +66,19 @@ optional arguments:
   --logger LOGFILE 		The shell output logger file
   --folder_prefix FOLDER_PREFIX
   						The folder prefixes for outputs
+```
+
 
 # Graphs
 
-![CartPole Learning Graph on DQN](Graphs/CartPole_DQN.png)
+<img src="Graphs/CartPole_DQN.png" alt="CartPole Learning Graph on DQN" width="50%" height="50%">
 
-![CartPole Learning Graph on Double DQN](Graphs/CartPole_DoubleDQN.png)
+<img src="Graphs/CartPole_DoubleDQN.png" alt="CartPole Learning Graph on Double DQN" width="50%" height="50%">
 
-![CartPole Learning Graph on Dueling DQN](Graphs/CartPole_DuelDQN.png)
+<img src="Graphs/CartPole_DuelDQN.png" alt="CartPole Learning Graph on Dueling DQN" width="50%" height="50%">
 
-![MountainCar Learning Graph on DQN](Graphs/MountainCar_DQN.png)
+<img src="Graphs/MountainCar_DQN.png" alt="MountainCar Learning Graph on DQN" width="50%" height="50%">
 
-![MountainCar Learning Graph on Double DQN](Graphs/MountainCar_DoubleDQN.png)
+<img src="Graphs/MountainCar_DoubleDQN.png" alt="MountainCar Learning Graph on Double DQN" width="50%" height="50%">
 
-![MountainCar Learning Graph on Dueling DQN](Graphs/MountainCar_DuelDQN.png)
+<img src="Graphs/MountainCar_DuelDQN.png" alt="MountainCar Learning Graph on Dueling DQN" width="50%" height="50%">
