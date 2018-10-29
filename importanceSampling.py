@@ -21,17 +21,13 @@ def computef(X):
 def computer(X, mean = None):
     mask = np.logical_and((X > -1), (X < 1))
     p_x = (0.5 * (1 + X)) * mask
-    # print()
-    # p_x_ = (0.5 * (1 + X))
-    # print('EQUALITY-P: {}'.format(sum(p_x==p_x_)))
+
     if mean == 0:
         q_x = norm.pdf(X, loc=0, scale=1)
     elif mean == 3:
         q_x = norm.pdf(X, loc=3, scale=1)
     else:
         q_x = ((15/16) * (X ** 2) * ((1 + X) ** 2))# * mask + 1e-5
-        # q_x_ = ((15/16) * (X ** 2) * ((1 + X) ** 2)) * mask
-        # print('EQUALITY-Q: {}'.format(sum(q_x==q_x_)))
 
     return p_x / q_x
 
@@ -58,9 +54,9 @@ def main():
         F = computef(X)
         R = computer(X, mean=3)
         if np.sum(R) == 0:
-            RW = R / (np.sum(R)+1e-3)# + 1e-3)
+            RW = R / (np.sum(R)+1e-3)
         else:
-            RW = R / (np.sum(R))# + 1e-3)
+            RW = R / (np.sum(R))
 
         FW3.append(F * RW)
         print ("Samples = " + str(i))
@@ -76,9 +72,9 @@ def main():
         F = computef(X)
         R = computer(X, mean=0)
         if np.sum(R) == 0:
-            RW = R / (np.sum(R)+1e-3)# + 1e-3)
+            RW = R / (np.sum(R)+1e-3)
         else:
-            RW = R / (np.sum(R))# + 1e-3)
+            RW = R / (np.sum(R))
         FW0.append(F * RW)
         print ("Samples = " + str(i))
         print ("Mean = " + str(np.mean(F * R)))
@@ -94,9 +90,9 @@ def main():
         F = computef(X)
         R = computer(X)
         if np.sum(R) == 0:
-            RW = R / (np.sum(R)+1e-3)# + 1e-3)
+            RW = R / (np.sum(R)+1e-3)
         else:
-            RW = R / (np.sum(R))# + 1e-3)
+            RW = R / (np.sum(R))
         FWQ.append(F *  RW )
         print ("Samples = " + str(i))
         print ("Mean = " + str(np.mean(F * R)))
